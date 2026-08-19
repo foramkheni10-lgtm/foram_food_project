@@ -1,0 +1,544 @@
+/* .burger-ingredients-page {
+  min-height: 100vh;
+  padding: 40px;
+
+  background: linear-gradient(
+    135deg,
+    #fff7ed,
+    #ffedd5
+  );
+
+  font-family: Arial, sans-serif;
+}
+
+.burger-customize-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.burger-big-icon {
+  font-size: 80px;
+}
+
+.burger-customize-header h1 {
+  font-size: 38px;
+  color: #222;
+  margin: 10px 0;
+}
+
+.burger-customize-header p {
+  font-size: 20px;
+  color: #666;
+}
+
+.burger-customize-header h2 {
+  color: #ff6b00;
+}
+
+.ingredient-title {
+  text-align: center;
+  font-size: 30px;
+  margin: 30px 0;
+  color: #222;
+}
+
+.burger-ingredients-grid {
+  max-width: 1200px;
+  margin: auto;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 25px;
+}
+
+.ingredient-card {
+  background: white;
+
+  border: 3px solid transparent;
+
+  border-radius: 18px;
+
+  padding: 25px;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 20px rgba(0, 0, 0, 0.08);
+
+  transition: 0.3s;
+}
+
+.ingredient-card:hover {
+  transform: translateY(-5px);
+}
+
+.ingredient-card.selected {
+  border-color: #ff6b00;
+  background: #fff3e8;
+}
+
+.ingredient-icon {
+  font-size: 55px;
+}
+
+.ingredient-card h3 {
+  font-size: 21px;
+  color: #222;
+}
+
+.ingredient-card p {
+  font-size: 17px;
+  color: #ff6b00;
+  font-weight: bold;
+}
+
+.ingredient-card span {
+  display: inline-block;
+
+  margin-top: 10px;
+
+  padding: 8px 15px;
+
+  border-radius: 8px;
+
+  background: #ff6b00;
+  color: white;
+
+  font-weight: bold;
+}
+
+.burger-price-box {
+  max-width: 700px;
+
+  margin: 40px auto 0;
+
+  padding: 30px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  text-align: center;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.burger-price-box h2 {
+  font-size: 26px;
+}
+
+.burger-final-price {
+  font-size: 40px;
+
+  color: #ff6b00;
+
+  font-weight: bold;
+
+  margin: 10px;
+}
+
+.burger-price-box p {
+  color: #666;
+}
+
+.add-burger-button {
+  margin-top: 15px;
+
+  padding: 15px 40px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #ff6b00;
+
+  color: white;
+
+  font-size: 18px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.add-burger-button:hover {
+  background: #e85d00;
+}
+
+@media (max-width: 900px) {
+  .burger-ingredients-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .burger-ingredients-grid {
+    grid-template-columns: 1fr;
+  }
+} */
+
+
+
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 30px;
+  z-index: 9999;
+
+  background: #333;
+  color: white;
+
+  border: none;
+  border-radius: 12px;
+
+  padding: 14px 24px;
+
+  font-size: 18px;
+  font-weight: bold;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+
+  transition: 0.2s;
+}
+.burger-ingredients-page {
+  min-height: 100vh;
+  padding: 40px 30px 60px;
+  background: linear-gradient(
+    135deg,
+    #fff7ed,
+    #ffedd5
+  );
+  font-family: Arial, sans-serif;
+}
+
+/* ------------------------------------------- */
+/* Header */
+/* ------------------------------------------- */
+
+.burger-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.burger-icon {
+  font-size: 75px;
+  margin-bottom: 10px;
+}
+
+.burger-header h1 {
+  font-size: 42px;
+  margin: 10px 0;
+  color: #222;
+}
+
+.burger-header p {
+  font-size: 20px;
+  color: #667085;
+  margin: 8px 0;
+}
+
+.burger-header h2 {
+  font-size: 28px;
+  margin-top: 25px;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+/* ------------------------------------------- */
+/* Ingredients Section */
+/* ------------------------------------------- */
+
+.ingredients-section {
+  max-width: 1200px;
+  margin: auto;
+}
+
+.ingredients-section > h2 {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 30px;
+  color: #222;
+}
+
+/* ------------------------------------------- */
+/* Ingredients Grid */
+/* ------------------------------------------- */
+
+.ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    1fr
+  );
+  gap: 25px;
+}
+
+/* ------------------------------------------- */
+/* Ingredient Card */
+/* ------------------------------------------- */
+
+.ingredient-card {
+  min-height: 190px;
+  padding: 25px;
+  background: white;
+  border: 3px solid transparent;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(
+    0,
+    0,
+    0,
+    0.08
+  );
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s,
+    border 0.2s,
+    box-shadow 0.2s;
+}
+
+.ingredient-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(
+    0,
+    0,
+    0,
+    0.12
+  );
+}
+
+.ingredient-card.selected {
+  border: 3px solid #ff6600;
+  background: #fff3e8;
+}
+
+/* ------------------------------------------- */
+/* Ingredient Icon */
+/* ------------------------------------------- */
+
+.ingredient-icon {
+  font-size: 55px;
+  margin-bottom: 10px;
+}
+
+.ingredient-card h3 {
+  margin: 5px 0;
+  font-size: 22px;
+  color: #222;
+}
+
+.ingredient-card p {
+  margin: 8px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff6600;
+}
+
+.ingredient-card span {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 7px 15px;
+  border-radius: 20px;
+  background: #eeeeee;
+  color: #555;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.ingredient-card.selected span {
+  background: #ff6600;
+  color: white;
+}
+
+/* ------------------------------------------- */
+/* Burger Summary */
+/* ------------------------------------------- */
+
+.burger-summary {
+  width: 85%;
+  max-width: 900px;
+
+  margin: 50px auto 0;
+
+  padding: 40px;
+
+  background: white;
+
+  border-radius: 25px;
+
+  box-shadow: 0 10px 30px rgba(
+    0,
+    0,
+    0,
+    0.08
+  );
+}
+
+/* ------------------------------------------- */
+/* Summary Heading */
+/* ------------------------------------------- */
+
+.burger-summary h2 {
+  text-align: center;
+
+  color: #f4f4f4;
+
+  font-size: 32px;
+
+  margin-bottom: 5px;
+}
+
+.burger-summary h3 {
+  text-align: center;
+
+  font-size: 25px;
+
+  font-weight: normal;
+
+  margin-bottom: 45px;
+
+  color: #444;
+}
+
+/* ------------------------------------------- */
+/* Price Rows */
+/* ------------------------------------------- */
+
+.price-row {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  font-size: 23px;
+
+  margin: 25px 0;
+}
+
+.price-row span {
+  color: #8b9bb0;
+}
+
+.price-row strong {
+  color: #222;
+}
+
+/* ------------------------------------------- */
+/* Divider */
+/* ------------------------------------------- */
+
+.burger-summary hr {
+  border: none;
+
+  border-top: 1px solid #aaa;
+
+  margin: 25px 0;
+}
+
+/* ------------------------------------------- */
+/* Total */
+/* ------------------------------------------- */
+
+.total-row {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  font-size: 30px;
+
+  margin-bottom: 40px;
+}
+
+.total-row strong {
+  color: #ff6600;
+
+  font-size: 36px;
+}
+
+/* ------------------------------------------- */
+/* Add To Cart */
+/* ------------------------------------------- */
+
+.add-cart-button {
+  width: 100%;
+
+  padding: 20px;
+
+  background: #ff6600;
+
+  color: white;
+
+  border: none;
+
+  border-radius: 12px;
+
+  font-size: 24px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.add-cart-button:hover {
+  background: #e85c00;
+
+  transform: scale(1.01);
+}
+
+/* ------------------------------------------- */
+/* Responsive */
+/* ------------------------------------------- */
+
+@media (max-width: 900px) {
+
+  .ingredients-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .ingredients-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .burger-header h1 {
+    font-size: 32px;
+  }
+
+  .burger-summary {
+    width: auto;
+    padding: 25px;
+  }
+
+  .price-row {
+    font-size: 18px;
+  }
+
+  .total-row {
+    font-size: 25px;
+  }
+
+  .total-row strong {
+    font-size: 30px;
+  }
+
+  .add-cart-button {
+    font-size: 19px;
+  }
+
+}

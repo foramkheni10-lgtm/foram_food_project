@@ -1,0 +1,441 @@
+/* =====================================================
+   MAIN PAGE
+===================================================== */
+
+.pizza-menu-page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 30px 40px 60px;
+
+  background: linear-gradient(
+    135deg,
+    #fff7ed,
+    #ffedd5
+  );
+
+  font-family: Arial, sans-serif;
+
+  position: relative;
+}
+
+
+/* =====================================================
+   CART BUTTON - TOP RIGHT
+===================================================== */
+
+.pizza-cart-button {
+  position: fixed;
+
+  top: 25px;
+  right: 25px;
+
+  z-index: 1000;
+
+  border: none;
+
+  background: #ff6600;
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: bold;
+
+  padding: 14px 28px;
+
+  border-radius: 15px;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+
+  transition: all 0.25s ease;
+}
+
+.pizza-cart-button:hover {
+  background: #e85b00;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.pizza-header {
+  text-align: center;
+
+  margin: 5px auto 45px;
+
+  max-width: 900px;
+}
+
+.pizza-header-icon {
+  font-size: 60px;
+
+  height: 65px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  margin-bottom: 5px;
+}
+
+.pizza-header h1 {
+  margin: 0;
+
+  font-size: 52px;
+
+  font-weight: 700;
+
+  color: #222;
+}
+
+.pizza-header p {
+  margin: 5px 0 0;
+
+  font-size: 25px;
+
+  color: #60789a;
+}
+
+
+/* =====================================================
+   PIZZA GRID
+===================================================== */
+
+.pizza-grid {
+  width: 100%;
+
+  max-width: 1180px;
+
+  margin: 0 auto;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 35px;
+}
+
+
+/* =====================================================
+   PIZZA CARD
+===================================================== */
+
+.pizza-card {
+  background: white;
+
+  border-radius: 24px;
+
+  min-height: 480px;
+
+  padding: 25px 28px 30px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  text-align: center;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.08);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.pizza-card:hover {
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+
+/* =====================================================
+   PIZZA ICON
+===================================================== */
+
+.pizza-card-icon {
+  font-size: 72px;
+
+  line-height: 1;
+
+  height: 80px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  margin-bottom: 10px;
+}
+
+
+/* =====================================================
+   PIZZA NAME
+===================================================== */
+
+.pizza-card h2 {
+  margin: 0 0 12px;
+
+  font-size: 30px;
+
+  line-height: 1.2;
+
+  color: #111;
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   DESCRIPTION
+===================================================== */
+
+.pizza-card-description {
+  margin: 0;
+
+  min-height: 72px;
+
+  max-width: 330px;
+
+  font-size: 21px;
+
+  line-height: 1.5;
+
+  color: #60789a;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: center;
+}
+
+
+/* =====================================================
+   PRICE
+===================================================== */
+
+.pizza-card-price {
+  margin-top: 18px;
+
+  margin-bottom: 25px;
+
+  font-size: 32px;
+
+  font-weight: bold;
+
+  color: #ff6600;
+}
+
+
+/* =====================================================
+   BUTTON CONTAINER
+===================================================== */
+
+.pizza-card-buttons {
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+
+  margin-top: auto;
+}
+
+
+/* =====================================================
+   ADD TO CART BUTTON
+===================================================== */
+
+.pizza-add-cart {
+  width: 100%;
+
+  height: 64px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: #ff6600;
+
+  color: white;
+
+  font-size: 23px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+.pizza-add-cart:hover {
+  background: #e85b00;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 7px 16px rgba(255, 102, 0, 0.25);
+}
+
+.pizza-add-cart:active {
+  transform: scale(0.98);
+}
+
+
+/* =====================================================
+   CUSTOMIZE BUTTON
+===================================================== */
+
+.pizza-customize {
+  width: 100%;
+
+  height: 64px;
+
+  border: 2px solid #ff6600;
+
+  border-radius: 14px;
+
+  background: white;
+
+  color: #ff6600;
+
+  font-size: 22px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+.pizza-customize:hover {
+  background: #fff3e8;
+
+  transform: translateY(-2px);
+}
+
+.pizza-customize:active {
+  transform: scale(0.98);
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1000px) {
+
+  .pizza-menu-page {
+    padding: 30px 25px 50px;
+  }
+
+  .pizza-grid {
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 25px;
+  }
+
+  .pizza-header h1 {
+    font-size: 44px;
+  }
+
+  .pizza-header p {
+    font-size: 22px;
+  }
+
+  .pizza-card h2 {
+    font-size: 27px;
+  }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+
+  .pizza-menu-page {
+    padding: 25px 15px 40px;
+  }
+
+  .pizza-cart-button {
+    top: 15px;
+
+    right: 15px;
+
+    font-size: 16px;
+
+    padding: 11px 18px;
+
+    border-radius: 12px;
+  }
+
+  .pizza-header {
+    margin-top: 35px;
+
+    margin-bottom: 30px;
+  }
+
+  .pizza-header-icon {
+    font-size: 50px;
+  }
+
+  .pizza-header h1 {
+    font-size: 36px;
+  }
+
+  .pizza-header p {
+    font-size: 19px;
+  }
+
+  .pizza-grid {
+    grid-template-columns: 1fr;
+
+    gap: 25px;
+  }
+
+  .pizza-card {
+    min-height: 450px;
+
+    padding: 25px 22px;
+  }
+
+  .pizza-card-icon {
+    font-size: 65px;
+  }
+
+  .pizza-card h2 {
+    font-size: 27px;
+  }
+
+  .pizza-card-description {
+    font-size: 19px;
+  }
+
+  .pizza-card-price {
+    font-size: 30px;
+  }
+
+}
