@@ -1,6 +1,7 @@
-
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./AIFoodAssistant.css";
 
 interface FoodRecommendation {
@@ -54,9 +55,14 @@ function AIFoodAssistant() {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
+  const navigate = useNavigate();
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const requestControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -66,55 +72,137 @@ function AIFoodAssistant() {
     },
   ]);
 
-  // Automatically scroll to the latest message
+  const addToCart = async (food: FoodRecommendation) => {
+    const token = localStorage.getItem("smartfoodcourt_token");
+
+    if (!token) {
+      alert("Please login first to add items to your cart.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await axios.post(
+        "http://127.0.0.1:8000/api/cart/items",
+        { food_id: food.id, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert(`${food.name} added to cart successfully!`);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        alert(
+          error.response?.data?.detail ||
+            "Unable to add item to cart. Please try again."
+        );
+      } else {
+        alert("Unable to add item to cart. Please try again.");
+      }
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
+      block: "end",
     });
   }, [messages, isLoading]);
 
-  // Stop microphone and speech when component is removed
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop();
       window.speechSynthesis?.cancel();
+      requestControllerRef.current?.abort();
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        URL.revokeObjectURL(audioRef.current.src);
+        audioRef.current = null;
+      }
     };
   }, []);
 
-  // Speak AI response
-  const speakResponse = (text: string) => {
-    if (!voiceEnabled || !("speechSynthesis" in window)) {
-      return;
+  const stopAudio = () => {
+    window.speechSynthesis?.cancel();
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      URL.revokeObjectURL(audioRef.current.src);
+      audioRef.current = null;
     }
 
-    window.speechSynthesis.cancel();
-
-    const speech = new SpeechSynthesisUtterance(text);
-
-    speech.lang = "en-IN";
-    speech.rate = 1;
-    speech.pitch = 1;
-
-    window.speechSynthesis.speak(speech);
+    setIsSpeaking(false);
   };
 
-  // Send customer message to FastAPI backend
+  const speakResponse = async (text: string) => {
+    if (!voiceEnabled) return;
+
+    stopAudio();
+
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/ai-assistant/avatar/speak",
+        { text },
+        {
+          responseType: "blob",
+          timeout: 120000,
+        }
+      );
+
+      const audioUrl = URL.createObjectURL(response.data);
+      const audio = new Audio(audioUrl);
+
+      audioRef.current = audio;
+      setIsSpeaking(true);
+
+      const cleanup = () => {
+        if (audioRef.current === audio) {
+          audioRef.current = null;
+          setIsSpeaking(false);
+        }
+
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onended = cleanup;
+      audio.onerror = cleanup;
+
+      await audio.play();
+    } catch (error) {
+      setIsSpeaking(false);
+      console.error("AI assistant voice error:", error);
+    }
+  };
+
+  const stopAIResponse = () => {
+    requestIdRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+
+    stopAudio();
+    setIsLoading(false);
+  };
+
   const sendMessage = async () => {
     const text = message.trim();
 
-    if (!text || isLoading) {
-      return;
-    }
+    if (!text) return;
 
-    const customerMessage: Message = {
-      id: Date.now(),
-      sender: "customer",
-      text,
-    };
+    stopAudio();
+    requestControllerRef.current?.abort();
+
+    const currentRequestId = ++requestIdRef.current;
+    const controller = new AbortController();
+
+    requestControllerRef.current = controller;
 
     setMessages((previous) => [
       ...previous,
-      customerMessage,
+      {
+        id: Date.now(),
+        sender: "customer",
+        text,
+      },
     ]);
 
     setMessage("");
@@ -123,35 +211,36 @@ function AIFoodAssistant() {
     try {
       const response = await axios.post<ChatResponse>(
         API_URL,
-        {
-          message: text,
-        },
+        { message: text },
         {
           headers: {
             "Content-Type": "application/json",
           },
           timeout: 130000,
+          signal: controller.signal,
         }
       );
 
-      const data = response.data;
+      if (currentRequestId !== requestIdRef.current) return;
 
-      const assistantMessage: Message = {
-        id: Date.now() + 1,
-        sender: "assistant",
-        text: data.reply,
-        recommendations: data.recommendations || [],
-      };
+      const data = response.data;
 
       setMessages((previous) => [
         ...previous,
-        assistantMessage,
+        {
+          id: Date.now() + 1,
+          sender: "assistant",
+          text: data.reply,
+          recommendations: data.recommendations || [],
+        },
       ]);
 
-      // Speak the AI response
-      speakResponse(data.reply);
+      void speakResponse(data.reply);
+    } catch (error: unknown) {
+      if (axios.isCancel(error)) return;
 
-    } catch (error) {
+      if (currentRequestId !== requestIdRef.current) return;
+
       console.error("AI Assistant Error:", error);
 
       let errorMessage =
@@ -177,13 +266,14 @@ function AIFoodAssistant() {
           text: errorMessage,
         },
       ]);
-
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoading(false);
+        requestControllerRef.current = null;
+      }
     }
   };
 
-  // Start voice input
   const startVoiceInput = () => {
     const speechWindow = window as SpeechWindow;
 
@@ -192,9 +282,7 @@ function AIFoodAssistant() {
       speechWindow.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert(
-        "Speech recognition is not supported. Please use Google Chrome."
-      );
+      alert("Speech recognition is not supported. Please use Google Chrome.");
       return;
     }
 
@@ -214,9 +302,7 @@ function AIFoodAssistant() {
       const transcript = event.results[0][0].transcript;
 
       setMessage((previous) =>
-        previous
-          ? `${previous} ${transcript}`
-          : transcript
+        previous ? `${previous} ${transcript}` : transcript
       );
     };
 
@@ -243,205 +329,229 @@ function AIFoodAssistant() {
     }
   };
 
-  // Close chatbot
   const closeAssistant = () => {
     recognitionRef.current?.stop();
     recognitionRef.current = null;
+
     setIsListening(false);
-    window.speechSynthesis?.cancel();
+
+    stopAudio();
     setIsOpen(false);
   };
 
   return (
     <>
-      {/* AI ASSISTANT HEADER BUTTON */}
+      {/* AI Assistant button stays in the homepage header. */}
       <button
         className="sf-ai-button"
         type="button"
         onClick={() => setIsOpen((previous) => !previous)}
+        aria-expanded={isOpen}
+        aria-label="Toggle AI Assistant"
       >
         <span>✨</span>
         AI Assistant
       </button>
 
-      {/* CHAT WINDOW */}
-      {isOpen && (
-        <div className="ai-chat-window">
+      {/* Portal prevents the chat window from being clipped by the header. */}
+      {isOpen &&
+        createPortal(
+          <div
+            className="ai-chat-window"
+            role="dialog"
+            aria-label="Smart Food Assistant"
+          >
+            {/* CHAT HEADER */}
+            <div className="ai-chat-header">
+              <div className="ai-header-info">
+                <div className={`ai-avatar ${isSpeaking ? "speaking" : ""}`}>
+                  <img
+                    src="/images/male-ai-assistant.png"
+                    alt="Male AI Assistant"
+                  />
+                  <span className="avatar-mouth"></span>
+                </div>
 
-          {/* CHAT HEADER */}
-          <div className="ai-chat-header">
-            <div className="ai-header-info">
-              <div className="ai-avatar">AI</div>
+                <div>
+                  <h3>Smart Food Assistant</h3>
+                  <p>
+                    <span className="ai-online-dot"></span>
+                    Your personal food assistant
+                  </p>
+                </div>
+              </div>
 
-              <div>
-                <h3>Smart Food Assistant</h3>
-                <p>
-                  <span className="ai-online-dot"></span>
-                  Your personal food assistant
-                </p>
+              <div className="ai-header-actions">
+                <button
+                  type="button"
+                  className={`ai-voice-toggle ${
+                    voiceEnabled ? "active" : ""
+                  }`}
+                  onClick={() => {
+                    setVoiceEnabled((previous) => {
+                      const next = !previous;
+
+                      if (!next) {
+                        stopAudio();
+                      }
+
+                      return next;
+                    });
+                  }}
+                  title={
+                    voiceEnabled ? "Turn off AI voice" : "Turn on AI voice"
+                  }
+                  aria-label={
+                    voiceEnabled ? "Turn off AI voice" : "Turn on AI voice"
+                  }
+                >
+                  {voiceEnabled ? "🔊" : "🔇"}
+                </button>
+
+                <button
+                  className="ai-close-button"
+                  type="button"
+                  onClick={closeAssistant}
+                  aria-label="Close assistant"
+                >
+                  ×
+                </button>
               </div>
             </div>
 
-            <div className="ai-header-actions">
-              <button
-                type="button"
-                className={`ai-voice-toggle ${
-                  voiceEnabled ? "active" : ""
-                }`}
-                onClick={() => {
-                  setVoiceEnabled((previous) => !previous);
-                  window.speechSynthesis?.cancel();
-                }}
-                title={
-                  voiceEnabled
-                    ? "Turn off AI voice"
-                    : "Turn on AI voice"
-                }
-              >
-                {voiceEnabled ? "🔊" : "🔇"}
-              </button>
-
-              <button
-                className="ai-close-button"
-                type="button"
-                onClick={closeAssistant}
-                aria-label="Close assistant"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-
-          {/* CHAT MESSAGES */}
-          <div className="ai-chat-messages">
-
-            {messages.map((item) => (
-              <div
-                key={item.id}
-                className={`ai-message-wrapper ${item.sender}`}
-              >
+            {/* CHAT MESSAGES */}
+            <div className="ai-chat-messages">
+              {messages.map((item) => (
                 <div
-                  className={`ai-message ${item.sender}`}
+                  key={item.id}
+                  className={`ai-message-wrapper ${item.sender}`}
                 >
-                  {item.text}
-                </div>
+                  <div className={`ai-message ${item.sender}`}>
+                    {item.text}
+                  </div>
 
-                {/* FOOD RECOMMENDATION CARDS */}
-                {item.recommendations &&
-                  item.recommendations.length > 0 && (
-                    <div className="ai-recommendations">
+                  {/* FOOD RECOMMENDATION CARDS */}
+                  {item.recommendations &&
+                    item.recommendations.length > 0 && (
+                      <div className="ai-recommendations">
+                        <h4>Recommended for you</h4>
 
-                      <h4>Recommended for you</h4>
+                        {item.recommendations.map((food) => (
+                          <div className="ai-food-card" key={food.id}>
+                            <div className="ai-food-details">
+                              <h5>{food.name}</h5>
 
-                      {item.recommendations.map((food) => (
-                        <div
-                          className="ai-food-card"
-                          key={food.id}
-                        >
-                          <div className="ai-food-details">
-                            <h5>{food.name}</h5>
+                              <p className="ai-food-category">
+                                {food.category}
+                              </p>
 
-                            <p className="ai-food-category">
-                              {food.category}
-                            </p>
+                              <p className="ai-food-description">
+                                {food.description}
+                              </p>
 
-                            <p className="ai-food-description">
-                              {food.description}
-                            </p>
-
-                            <div className="ai-food-bottom">
-                              <span className="ai-food-price">
-                                {food.price !== null &&
-                                food.price !== undefined
-                                  ? `₹${food.price}`
-                                  : "Price unavailable"}
-                              </span>
-
-                              {food.spice_level && (
-                                <span className="ai-spice-level">
-                                  {food.spice_level}
+                              <div className="ai-food-bottom">
+                                <span className="ai-food-price">
+                                  {food.price !== null &&
+                                  food.price !== undefined
+                                    ? `₹${food.price}`
+                                    : "Price unavailable"}
                                 </span>
-                              )}
+
+                                {food.spice_level && (
+                                  <span className="ai-spice-level">
+                                    {food.spice_level}
+                                  </span>
+                                )}
+                              </div>
+
+                              <button
+                                type="button"
+                                className="ai-add-cart-button"
+                                onClick={() => void addToCart(food)}
+                              >
+                                Add to Cart
+                              </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
-
-                    </div>
-                  )}
-              </div>
-            ))}
-
-            {/* LOADING INDICATOR */}
-            {isLoading && (
-              <div className="ai-message-wrapper assistant">
-                <div className="ai-message assistant ai-loading">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <small>Finding delicious food...</small>
+                        ))}
+                      </div>
+                    )}
                 </div>
-              </div>
-            )}
+              ))}
 
-            <div ref={messagesEndRef} />
+              {/* LOADING INDICATOR */}
+              {isLoading && (
+                <div className="ai-message-wrapper assistant">
+                  <div className="ai-message assistant ai-loading">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <small>Finding delicious food...</small>
+                  </div>
+                </div>
+              )}
 
-          </div>
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* INPUT AREA */}
-          <div className="ai-chat-input">
+            {/* INPUT AREA */}
+            <div className="ai-chat-input">
+              <button
+                type="button"
+                className={`ai-mic-button ${
+                  isListening ? "listening" : ""
+                }`}
+                onClick={startVoiceInput}
+                title="Speak your message"
+                aria-label="Start voice input"
+                disabled={isLoading}
+              >
+                {isListening ? "🔴" : "🎤"}
+              </button>
 
-            <button
-              type="button"
-              className={`ai-mic-button ${
-                isListening ? "listening" : ""
-              }`}
-              onClick={startVoiceInput}
-              title="Speak your message"
-              aria-label="Start voice input"
-              disabled={isLoading}
-            >
-              {isListening ? "🔴" : "🎤"}
-            </button>
-
-            <input
-              type="text"
-              value={message}
-              placeholder={
-                isListening
-                  ? "Listening..."
-                  : "Type or speak your food request..."
-              }
-              onChange={(event) =>
-                setMessage(event.target.value)
-              }
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  void sendMessage();
+              <input
+                type="text"
+                value={message}
+                placeholder={
+                  isListening
+                    ? "Listening..."
+                    : "Type or speak your food request..."
                 }
-              }}
-              disabled={isLoading}
-            />
+                onChange={(event) => setMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void sendMessage();
+                  }
+                }}
+                disabled={isLoading}
+                aria-label="Message for AI assistant"
+              />
 
-            <button
-              type="button"
-              className="ai-send-button"
-              onClick={() => void sendMessage()}
-              disabled={!message.trim() || isLoading}
-            >
-              {isLoading ? "..." : "Send"}
-            </button>
+              <button
+                type="button"
+                className="ai-send-button"
+                onClick={() => {
+                  if (isLoading) {
+                    stopAIResponse();
+                  } else {
+                    void sendMessage();
+                  }
+                }}
+                disabled={!isLoading && !message.trim()}
+                aria-label={isLoading ? "Stop AI response" : "Send message"}
+              >
+                {isLoading ? "■" : "➤"}
+              </button>
+            </div>
 
-          </div>
-
-          <p className="ai-voice-hint">
-            {isListening
-              ? "Listening to your voice..."
-              : "🎤 Speak your request or type your message"}
-          </p>
-
-        </div>
-      )}
+            <p className="ai-voice-hint">
+              {isListening
+                ? "Listening to your voice..."
+                : "🎤 Speak your request or type your message"}
+            </p>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

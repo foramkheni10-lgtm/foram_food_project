@@ -1,0 +1,513 @@
+
+/* ==========================================
+   SMART FOODCOURT - CUSTOMER FEEDBACK
+   MODERN GOURMET THEME
+========================================== */
+
+.feedback-page {
+  min-height: 100vh;
+  padding-bottom: 75px;
+  background: #F8F5EF;
+  color: #292521;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ==========================================
+   PAGE HEADING
+========================================== */
+
+.feedback-heading {
+  width: 100%;
+  min-height: 260px;
+  padding: 55px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #EFE7DC;
+  border-bottom: 1px solid #E7DED3;
+  box-sizing: border-box;
+}
+
+.feedback-eyebrow {
+  margin-bottom: 12px;
+  color: #B95736;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+}
+
+.feedback-heading h1 {
+  margin: 0;
+  color: #292521;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.feedback-heading p {
+  max-width: 590px;
+  margin: 14px auto 0;
+  color: #77716B;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   MAIN LAYOUT
+========================================== */
+
+.feedback-container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 50px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: start;
+  gap: 28px;
+  box-sizing: border-box;
+}
+
+/* ==========================================
+   COMMON CARD STYLE
+========================================== */
+
+.feedback-form-card,
+.feedback-history {
+  min-width: 0;
+  padding: 28px;
+  background: #FFFFFF;
+  border: 1px solid #E7DED3;
+  border-radius: 16px;
+  box-shadow: 0 5px 22px rgba(80, 50, 35, 0.06);
+}
+
+/* ==========================================
+   FORM CARD HEADING
+========================================== */
+
+.feedback-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 22px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #EFE7DC;
+}
+
+.feedback-card-heading > svg {
+  width: 45px;
+  height: 45px;
+  padding: 11px;
+  flex-shrink: 0;
+  color: #B95736;
+  background: #F8E8DF;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.feedback-card-heading h2 {
+  margin: 0 0 5px;
+  color: #292521;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.feedback-card-heading p {
+  margin: 0;
+  color: #77716B;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ==========================================
+   FORM LABELS
+========================================== */
+
+.feedback-form-card form > label {
+  display: block;
+  margin: 20px 0 9px;
+  color: #292521;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   ORDER SELECT
+========================================== */
+
+.feedback-form-card select {
+  width: 100%;
+  height: 48px;
+  padding: 0 13px;
+  color: #292521;
+  background: #FFFFFF;
+  border: 1px solid #E7DED3;
+  border-radius: 9px;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feedback-form-card select:focus {
+  border-color: #B95736;
+  box-shadow: 0 0 0 3px rgba(185, 87, 54, 0.10);
+}
+
+/* ==========================================
+   STAR RATING
+========================================== */
+
+.feedback-stars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.feedback-stars button {
+  width: 39px;
+  height: 39px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #D8CEC2;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.feedback-stars button:hover {
+  transform: scale(1.15);
+}
+
+.feedback-stars button.active {
+  color: #E2A12F;
+}
+
+.feedback-stars button svg {
+  stroke-width: 1.8;
+}
+
+.feedback-rating-text {
+  min-height: 18px;
+  margin: 8px 0 0;
+  color: #B95736;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   COMMENT TEXTAREA
+========================================== */
+
+.feedback-form-card textarea {
+  width: 100%;
+  min-height: 135px;
+  padding: 14px;
+  resize: vertical;
+  color: #292521;
+  background: #FFFEFC;
+  border: 1px solid #E7DED3;
+  border-radius: 9px;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feedback-form-card textarea::placeholder {
+  color: #AAA096;
+}
+
+.feedback-form-card textarea:focus {
+  border-color: #B95736;
+  box-shadow: 0 0 0 3px rgba(185, 87, 54, 0.10);
+}
+
+/* CHARACTER COUNT */
+
+.feedback-character-count {
+  margin-top: 7px;
+  color: #999087;
+  font-size: 11px;
+  text-align: right;
+}
+
+/* ==========================================
+   SUBMIT BUTTON
+========================================== */
+
+.feedback-submit-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 20px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #FFFFFF;
+  background: #B95736;
+  border: 1px solid #B95736;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.feedback-submit-button:hover:not(:disabled) {
+  background: #A94729;
+  border-color: #A94729;
+  transform: translateY(-2px);
+}
+
+.feedback-submit-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   SUCCESS AND ERROR MESSAGES
+========================================== */
+
+.feedback-success,
+.feedback-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.feedback-success {
+  color: #3F6B20;
+  background: #F0F6E9;
+  border: 1px solid #D7E8C8;
+}
+
+.feedback-error {
+  color: #A52B25;
+  background: #FFF0EE;
+  border: 1px solid #F1D0CB;
+}
+
+.feedback-note {
+  margin: 14px 0 0;
+  color: #8A8178;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ==========================================
+   PREVIOUS FEEDBACK
+========================================== */
+
+.feedback-history h2 {
+  margin: 0 0 23px;
+  padding-bottom: 18px;
+  color: #292521;
+  border-bottom: 1px solid #EFE7DC;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* EMPTY HISTORY */
+
+.feedback-empty {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  color: #A69B90;
+  text-align: center;
+}
+
+.feedback-empty svg {
+  color: #C47A5D;
+}
+
+.feedback-empty p {
+  margin: 0;
+  color: #77716B;
+  font-size: 13px;
+}
+
+/* REVIEW ITEM */
+
+.feedback-review {
+  padding: 18px;
+  margin-bottom: 15px;
+  background: #FFFCF8;
+  border: 1px solid #EFE7DC;
+  border-radius: 11px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feedback-review:last-child {
+  margin-bottom: 0;
+}
+
+.feedback-review:hover {
+  border-color: #DDB9A7;
+  box-shadow: 0 4px 12px rgba(80, 50, 35, 0.05);
+}
+
+.feedback-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.feedback-review-top strong {
+  color: #292521;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.feedback-review-top span {
+  color: #E2A12F;
+  font-size: 16px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.feedback-review p {
+  margin: 13px 0;
+  color: #6F6861;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.feedback-review small {
+  display: block;
+  color: #A0968C;
+  font-size: 11px;
+}
+
+/* ==========================================
+   LOADING
+========================================== */
+
+.feedback-loading {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #B95736;
+  background: #F8F5EF;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 900px) {
+  .feedback-container {
+    grid-template-columns: 1fr;
+    max-width: 680px;
+    gap: 22px;
+    padding-top: 35px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+  .feedback-page {
+    padding-bottom: 40px;
+  }
+
+  .feedback-heading {
+    min-height: 220px;
+    padding: 38px 18px;
+  }
+
+  .feedback-heading h1 {
+    font-size: 29px;
+  }
+
+  .feedback-heading p {
+    max-width: 340px;
+    font-size: 12px;
+  }
+
+  .feedback-container {
+    padding: 25px 14px 40px;
+    gap: 18px;
+  }
+
+  .feedback-form-card,
+  .feedback-history {
+    padding: 19px 16px;
+    border-radius: 13px;
+  }
+
+  .feedback-card-heading {
+    gap: 11px;
+    margin-bottom: 18px;
+    padding-bottom: 17px;
+  }
+
+  .feedback-card-heading h2,
+  .feedback-history h2 {
+    font-size: 18px;
+  }
+
+  .feedback-stars {
+    gap: 5px;
+  }
+
+  .feedback-stars button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .feedback-stars button svg {
+    width: 29px;
+    height: 29px;
+  }
+
+  .feedback-review {
+    padding: 14px;
+  }
+
+  .feedback-review-top strong {
+    font-size: 12px;
+  }
+
+  .feedback-review-top span {
+    font-size: 14px;
+  }
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-page *,
+  .feedback-page *::before,
+  .feedback-page *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

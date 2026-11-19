@@ -1,8 +1,44 @@
 
+/* ==========================================
+   SMART FOODCOURT
+   MODERN GOURMET DESIGN SYSTEM
+========================================== */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light;
+
+  /* BRAND COLORS */
+  --sf-primary: #B95736;
+  --sf-primary-dark: #A94729;
+  --sf-peach: #D99A68;
+  --sf-gold: #C99B62;
+
+  /* BACKGROUNDS */
+  --sf-background: #F8F5EF;
+  --sf-surface: #FFFFFF;
+  --sf-surface-light: #EFE7DC;
+  --sf-surface-hover: #F4EDE4;
+
+  /* TEXT */
+  --sf-text: #292521;
+  --sf-muted: #77716B;
+  --sf-border: #E7DED3;
+
+  /* STATUS */
+  --sf-success: #4D7C0F;
+  --sf-warning: #D97706;
+  --sf-danger: #B91C1C;
+
+  /* EFFECTS */
+  --sf-shadow: 0 4px 18px rgba(65, 43, 28, 0.07);
+  --sf-shadow-hover: 0 12px 30px rgba(65, 43, 28, 0.13);
+  --sf-transition: .3s ease;
 }
 
 html,
@@ -12,14 +48,23 @@ body,
   min-height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: #faf7f2;
-  color: #292524;
+  background: var(--sf-background);
+  color: var(--sf-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font-family: inherit;
 }
 
@@ -28,5 +73,65 @@ button {
 }
 
 a {
+  color: inherit;
   text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--sf-primary);
+  color: #FFFFFF;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sf-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C9B8A8;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sf-primary);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--sf-primary);
+  outline-offset: 3px;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    background-color .25s ease,
+    border-color .25s ease,
+    color .25s ease,
+    box-shadow .25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }

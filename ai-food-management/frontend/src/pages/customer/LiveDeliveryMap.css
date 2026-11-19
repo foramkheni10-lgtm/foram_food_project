@@ -1,0 +1,176 @@
+
+.live-delivery-section {
+  margin: 22px 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e7e0d8;
+  border-radius: 12px;
+}
+
+.live-delivery-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.live-delivery-eyebrow {
+  color: #c65d3a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.live-delivery-heading h3 {
+  margin: 7px 0 4px;
+  color: #292524;
+  font-size: 19px;
+}
+
+.live-delivery-heading p {
+  margin: 0;
+  color: #78716c;
+  font-size: 12px;
+}
+
+.live-delivery-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border-radius: 20px;
+  background: #f0f7e8;
+  color: #4d7c0f;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.live-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4d7c0f;
+  animation: livePulse 1.4s infinite;
+}
+
+@keyframes livePulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+.live-delivery-map {
+  width: 100%;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid #e7e0d8;
+}
+
+.delivery-leaflet-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.live-map-marker {
+  background: transparent;
+  border: none;
+}
+
+.restaurant-pin,
+.customer-pin,
+.delivery-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.restaurant-pin {
+  background: #c65d3a;
+  color: white;
+}
+
+.customer-pin {
+  background: #4d7c0f;
+  color: white;
+}
+
+.delivery-pin {
+  width: 40px;
+  height: 40px;
+  background: white;
+  font-size: 23px;
+}
+
+.live-delivery-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 17px 0;
+}
+
+.live-delivery-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-delivery-info span {
+  color: #78716c;
+  font-size: 12px;
+}
+
+.live-delivery-info strong {
+  color: #292524;
+  font-size: 14px;
+}
+
+.live-delivery-progress {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eee7df;
+}
+
+.live-delivery-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #c65d3a;
+  transition: width 1.4s linear;
+}
+
+.live-delivery-disclaimer {
+  margin: 12px 0 0;
+  color: #78716c;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 500px) {
+  .live-delivery-section {
+    padding: 13px;
+  }
+
+  .live-delivery-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .live-delivery-map {
+    height: 280px;
+  }
+
+  .live-delivery-info strong {
+    font-size: 12px;
+  }
+}

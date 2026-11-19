@@ -16,7 +16,11 @@ from .login import router as login_router
 from app.routes.customer import restaurant
 from app.routes.customer import food
 from app.routes.customer import ai_assistant
-
+from app.routes.customer import avatar
+from app.routes.customer import profile
+from app.routes.customer import cart
+from app.routes.customer import orders
+from app.routes.customer import feedback
 # -------------------------------------------------
 # Application startup and shutdown
 # -------------------------------------------------
@@ -88,8 +92,11 @@ app.include_router(restaurant.router)
 app.include_router(food.router)
 
 app.include_router(ai_assistant.router)
-
-
+app.include_router(avatar.router)
+app.include_router(profile.router)
+app.include_router(cart.router)
+app.include_router(orders.router)
+app.include_router(feedback.router)
 # -------------------------------------------------
 # Home API
 # -------------------------------------------------

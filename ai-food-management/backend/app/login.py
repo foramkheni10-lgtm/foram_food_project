@@ -1,63 +1,66 @@
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
-import hashlib
-
-load_dotenv()
+from app.database import database
+from app.security import create_access_token
+import bcrypt
 
 router = APIRouter(
     prefix="/customer",
     tags=["Customer Login"]
 )
 
-# MongoDB connection
-client = MongoClient(os.getenv("MONGODB_URL"))
-
-db = client["mainfood"]
-customers_collection = db["customers"]
-
-
-# -------------------------------------------------
-# Login request model
-# -------------------------------------------------
 
 class CustomerLogin(BaseModel):
     email: EmailStr
     password: str
 
 
-# -------------------------------------------------
-# Customer Login
-# -------------------------------------------------
-
 @router.post("/login")
 async def login_customer(customer: CustomerLogin):
 
-    # Hash entered password
-    hashed_password = hashlib.sha256(
-        customer.password.encode()
-    ).hexdigest()
+    email = str(customer.email).lower().strip()
 
-    # Find customer
-    existing_customer = customers_collection.find_one(
-        {
-            "email": customer.email,
-            "password": hashed_password
-        }
+    existing_user = await database.users.find_one(
+        {"email": email}
     )
 
-    # Customer not found
-    if not existing_customer:
+    if not existing_user:
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password"
         )
 
+    stored_password = existing_user.get("password", "")
+
+    try:
+        password_valid = bcrypt.checkpw(
+            customer.password.encode("utf-8"),
+            stored_password.encode("utf-8")
+        )
+    except (ValueError, TypeError):
+        password_valid = False
+
+    if not password_valid:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+
+    access_token = create_access_token(
+        str(existing_user["_id"])
+    )
+
     return {
         "success": True,
         "message": "Login successful",
-        "customer_name": existing_customer["customer_name"],
-        "email": existing_customer["email"]
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(existing_user["_id"]),
+            "name": existing_user.get("name", ""),
+            "email": existing_user.get("email", ""),
+            "phone": existing_user.get("phone", "")
+        },
+        "next_page": "/"
     }

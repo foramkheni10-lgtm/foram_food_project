@@ -74,17 +74,65 @@ def is_food_related(message: str) -> bool:
 # --------------------------------------------------
 
 def detect_preferences(message: str):
-    message = message.lower()
+    message = message.lower().replace("-", " ")
+
+    non_spicy = any(word in message for word in [
+        "non spicy", "not spicy", "mild",
+        "less spicy", "no spice"
+    ])
+
+    non_vegetarian = any(word in message for word in [
+        "non vegetarian", "non veg",
+        "chicken", "fish", "mutton", "prawn"
+    ])
+
+    vegetarian = (
+        not non_vegetarian
+        and any(word in message for word in [
+            "vegetarian", "veg food", "pure veg",
+            "vegetarian food", "non meat"
+        ])
+    )
 
     return {
-        "spicy": any(word in message for word in [
-            "spicy", "hot food", "peri peri"
+        "spicy": (
+            not non_spicy
+            and any(word in message for word in [
+                "spicy", "hot food", "peri peri"
+            ])
+        ),
+        "non_spicy": non_spicy,
+        "dessert": any(word in message for word in [
+            "dessert", "sweet", "ice cream", "chocolate",
+            "brownie", "cake", "gulab jamun"
         ]),
+        "drinks": any(word in message for word in [
+            "cold drink", "cold drinks", "drink", "drinks",
+            "beverage", "beverages", "juice", "soft drink",
+            "lassi", "milkshake", "mojito"
+        ]),
+        "vegetarian": vegetarian,
+        "non_vegetarian": non_vegetarian,
+        "popular": any(word in message for word in [
+            "popular", "best", "famous", "top rated"
+        ])
+    }
+    message = message.lower().replace("-", " ")
 
-        "non_spicy": any(word in message for word in [
-            "non spicy", "not spicy", "mild",
-            "less spicy", "no spice"
-        ]),
+    non_spicy = any(word in message for word in [
+        "non spicy", "not spicy", "mild",
+        "less spicy", "no spice"
+    ])
+
+    return {
+        "spicy": (
+            not non_spicy
+            and any(word in message for word in [
+                "spicy", "hot food", "peri peri"
+            ])
+        ),
+
+        "non_spicy": non_spicy,
 
         "dessert": any(word in message for word in [
             "dessert", "sweet", "ice cream", "chocolate",
@@ -103,7 +151,7 @@ def detect_preferences(message: str):
         ]),
 
         "non_vegetarian": any(word in message for word in [
-            "non vegetarian", "non-vegetarian", "non veg",
+            "non vegetarian", "non veg",
             "chicken", "fish", "mutton", "prawn"
         ]),
 
@@ -111,7 +159,6 @@ def detect_preferences(message: str):
             "popular", "best", "famous", "top rated"
         ])
     }
-
 
 # --------------------------------------------------
 # 3. EXTRACT CUSTOMER BUDGET
@@ -164,19 +211,43 @@ def extract_people_count(message: str):
 def is_spicy(food):
     description = str(food.get("description") or "").lower()
     name = str(food.get("name") or "").lower()
-    spice_level = str(food.get("spice_level") or "").lower()
+    spice_level = str(food.get("spice_level") or "").lower().strip()
+
+    if is_drink(food) or is_dessert(food):
+        return False
 
     spicy_keywords = [
-        "spicy", "hot", "peri peri", "chilli", "chili",
-        "tikka", "masala"
+        "spicy", "peri peri", "chilli", "chili",
+        "schezwan", "vindaloo", "hot and spicy",
+        "spiced", "masala", "tikka"
+    ]
+
+    if spice_level in ["medium", "high", "spicy", "hot"]:
+        return True
+
+    return any(
+        word in name or word in description
+        for word in spicy_keywords
+    )
+
+    description = str(food.get("description") or "").lower()
+    name = str(food.get("name") or "").lower()
+    spice_level = str(food.get("spice_level") or "").lower().strip()
+
+    # Drinks and desserts should never be recommended as spicy meals.
+    if is_drink(food) or is_dessert(food):
+        return False
+
+    spicy_keywords = [
+        "spicy", "peri peri", "chilli", "chili",
+        "schezwan", "vindaloo", "jalapeno"
     ]
 
     return (
         spice_level in ["medium", "high", "spicy", "hot"]
-        or any(word in description for word in spicy_keywords)
-        or any(word in name for word in spicy_keywords)
+        or any(word in name or word in description
+               for word in spicy_keywords)
     )
-
 
 def is_dessert(food):
     name = str(food.get("name") or "").lower()
@@ -195,6 +266,88 @@ def is_dessert(food):
 
 
 def is_drink(food):
+    name = str(
+        food.get("name") or food.get("food_name") or ""
+    ).lower().strip()
+
+    category = str(
+        food.get("category") or ""
+    ).lower().strip()
+
+    drink_categories = [
+        "drink", "drinks",
+        "beverage", "beverages",
+        "cold drink", "cold drinks"
+    ]
+
+    drink_keywords = [
+        "juice", "coke", "coca cola", "pepsi",
+        "sprite", "limca", "lemonade", "lassi",
+        "milkshake", "mojito", "iced tea",
+        "water", "soda", "coffee", "tea"
+    ]
+
+    non_drink_keywords = [
+        "burger", "pizza", "sandwich", "biryani",
+        "paneer", "fries", "pasta", "chole",
+        "brownie", "cake", "dessert"
+    ]
+
+    if any(word in name for word in non_drink_keywords):
+        return False
+
+    return (
+        category in drink_categories
+        or any(word in name for word in drink_keywords)
+    )
+    name = str(
+        food.get("name") or food.get("food_name") or ""
+    ).lower().strip()
+
+    category = str(
+        food.get("category") or ""
+    ).lower().strip()
+
+    drink_categories = [
+        "drink", "drinks",
+        "beverage", "beverages",
+        "cold drink", "cold drinks"
+    ]
+
+    drink_keywords = [
+        "juice", "coke", "coca cola", "pepsi",
+        "sprite", "limca", "lemonade", "lassi",
+        "milkshake", "mojito", "iced tea",
+        "water", "soda", "coffee", "tea"
+    ]
+
+    if category in drink_categories:
+        return True
+
+    return any(
+        word in name
+        for word in drink_keywords
+    )
+
+    name = str(food.get("name") or "").lower().strip()
+    category = str(food.get("category") or "").lower().strip()
+
+    drink_categories = [
+        "drink", "drinks", "beverage", "beverages",
+        "cold drink", "cold drinks"
+    ]
+
+    drink_keywords = [
+        "juice", "coke", "coca cola", "pepsi",
+        "sprite", "limca", "lemonade", "lassi",
+        "milkshake", "mojito", "iced tea",
+        "water", "soda", "coffee", "tea"
+    ]
+
+    return (
+        category in drink_categories
+        or any(word in name for word in drink_keywords)
+    )
     name = str(food.get("name") or "").lower()
     category = str(food.get("category") or "").lower()
 
@@ -382,7 +535,7 @@ Expected JSON:
         if not isinstance(recommended_ids, list):
             recommended_ids = []
 
-        # STEP 6: Filter actual food recommendations.
+              # STEP 6: Filter actual food recommendations.
 
         recommended_foods = []
 
@@ -395,64 +548,56 @@ Expected JSON:
             preferences["non_vegetarian"]
         ])
 
-        # SPICY FOOD
-
-        if preferences["spicy"]:
-            recommended_foods.extend([
-                food for food in menu
-                if is_spicy(food)
-            ])
-
-        # NON-SPICY FOOD
-
-        if preferences["non_spicy"]:
-            recommended_foods.extend([
-                food for food in menu
-                if not is_spicy(food)
-                and not is_dessert(food)
-                and not is_drink(food)
-            ])
-
-        # DESSERT
-
-        if preferences["dessert"]:
-            recommended_foods.extend([
-                food for food in menu
-                if is_dessert(food)
-            ])
-
         # DRINKS
-
         if preferences["drinks"]:
-            recommended_foods.extend([
-                food for food in menu
-                if is_drink(food)
-            ])
-
-        # VEGETARIAN FOOD
-
-        if preferences["vegetarian"]:
-            recommended_foods.extend([
-                food for food in menu
-                if is_vegetarian(food)
-            ])
-
-        # NON-VEGETARIAN FOOD
-
-        if preferences["non_vegetarian"]:
-            recommended_foods.extend([
-                food for food in menu
-                if not is_vegetarian(food)
-            ])
-
-        # NORMAL AI RECOMMENDATIONS
-
-        if not has_special_preference:
             recommended_foods = [
                 food for food in menu
-                if food["id"] in recommended_ids
+                if is_drink(food)
             ]
 
+        # OTHER SPECIAL PREFERENCES
+        else:
+
+            if preferences["spicy"]:
+                recommended_foods.extend([
+                    food for food in menu
+                    if is_spicy(food)
+                ])
+
+            if preferences["non_spicy"]:
+                recommended_foods.extend([
+                    food for food in menu
+                    if not is_spicy(food)
+                    and not is_dessert(food)
+                    and not is_drink(food)
+                ])
+
+            if preferences["dessert"]:
+                recommended_foods.extend([
+                    food for food in menu
+                    if is_dessert(food)
+                ])
+
+            if preferences["vegetarian"]:
+                recommended_foods.extend([
+                    food for food in menu
+                    if is_vegetarian(food)
+                    and not is_drink(food)
+                ])
+
+            if preferences["non_vegetarian"]:
+                recommended_foods.extend([
+                    food for food in menu
+                    if not is_vegetarian(food)
+                    and not is_drink(food)
+                ])
+
+            # NORMAL AI RECOMMENDATIONS
+            if not has_special_preference:
+                recommended_foods = [
+                    food for food in menu
+                    if food["id"] in recommended_ids
+                ]
         # STEP 7: Apply customer's budget.
 
         if budget is not None:
@@ -464,10 +609,19 @@ Expected JSON:
 
         # STEP 8: Remove duplicate recommendations.
 
+                # STEP 8: Remove duplicate food names.
+
         unique_foods = {}
 
         for food in recommended_foods:
-            unique_foods[food["id"]] = food
+            normalized_name = re.sub(
+                r"\s+",
+                " ",
+                food["name"].strip().lower()
+            )
+
+            if normalized_name not in unique_foods:
+                unique_foods[normalized_name] = food
 
         recommended_foods = list(unique_foods.values())
 
