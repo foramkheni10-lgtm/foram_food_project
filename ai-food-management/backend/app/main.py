@@ -1,3 +1,4 @@
+
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -23,25 +24,17 @@ from app.routes.customer import cart
 from app.routes.customer import orders
 from app.routes.customer import feedback
 from app.routes.customer import favorites
-# -------------------------------------------------
-# Application startup and shutdown
-# -------------------------------------------------
 
+
+# Application startup and shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Check MongoDB when server starts
     await check_database_connection()
-
     yield
-
-    # Close MongoDB when server stops
     await close_database_connection()
 
 
-# -------------------------------------------------
 # Create FastAPI application
-# -------------------------------------------------
-
 app = FastAPI(
     title="AI Food Management API",
     description="Backend API for AI Food Management System",
@@ -49,20 +42,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE_DIR / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-# -------------------------------------------------
-# CORS Configuration
-# -------------------------------------------------
 
+
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://foram-food-project-74xf.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -70,33 +64,12 @@ app.add_middleware(
 )
 
 
-# -------------------------------------------------
-# Registration routes
-# -------------------------------------------------
-
+# Register routers
 app.include_router(registration_router)
-
-
-# -------------------------------------------------
-# Login routes
-# -------------------------------------------------
-
 app.include_router(login_router)
 
-
-# -------------------------------------------------
-# Restaurant routes
-# -------------------------------------------------
-
 app.include_router(restaurant.router)
-
-
-# -------------------------------------------------
-# Food routes
-# -------------------------------------------------
-
 app.include_router(food.router)
-
 app.include_router(ai_assistant.router)
 app.include_router(avatar.router)
 app.include_router(profile.router)
@@ -104,10 +77,9 @@ app.include_router(cart.router)
 app.include_router(orders.router)
 app.include_router(feedback.router)
 app.include_router(favorites.router)
-# -------------------------------------------------
-# Home API
-# -------------------------------------------------
 
+
+# Home API
 @app.get("/")
 async def root():
     return {
@@ -121,10 +93,7 @@ async def root():
     }
 
 
-# -------------------------------------------------
 # Database test
-# -------------------------------------------------
-
 @app.get("/database-test")
 async def database_test():
     return {
