@@ -663,12 +663,7 @@ const addToCart = async (food: Food) => {
   }
 };
 
-  const openCustomization = (food: Food) => {
-    setCustomizingFood(food);
-    setSelectedOptions({});
-    setSpecialInstructions("");
-    setQuantity(1);
-  };
+ 
 
   const closeCustomization = () => {
     if (addingToCart) return;
@@ -1123,7 +1118,7 @@ const addToCart = async (food: Food) => {
                 <strong>₹{basePrice.toFixed(2)}</strong>
               </div>
 
-              {currentGroups.map((group, groupIndex) => (
+              {currentGroups.map((group) => (
                 <div className="customize-group" key={group.name}>
                   <div className="customize-group-heading">
                     <h3>{group.name}</h3>
