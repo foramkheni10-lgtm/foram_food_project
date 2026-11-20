@@ -9,6 +9,10 @@ from pydantic import BaseModel
 
 from app.database import database
 from app.security import get_current_customer
+from app.routes.customer.cart import (
+    validate_customizations,
+    calculate_customization_price
+)
 
 
 router = APIRouter(
@@ -252,7 +256,7 @@ async def place_order(
             detail="Your cart is empty."
         )
 
-    # VALIDATE CART ITEMS
+    # VALIDATE CART ITEMS AND RECALCULATE PRICES
 
     order_items = []
     total_price = 0.0
@@ -284,15 +288,48 @@ async def place_order(
                 detail="Invalid item quantity in cart."
             )
 
-        price = get_food_price(food)
-        subtotal = price * quantity
+        # Get the current food price directly from MongoDB.
+        base_price = get_food_price(food)
+
+        # Validate customization options again.
+        # Never trust prices stored in the cart.
+        raw_customizations = cart_item.get("customizations", [])
+
+        if not isinstance(raw_customizations, list):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid customization data in cart."
+            )
+
+        customizations = validate_customizations(
+            food,
+            raw_customizations
+        )
+
+        # Calculate customization price using backend prices.
+        customization_total = calculate_customization_price(
+            customizations
+        )
+
+        unit_price = base_price + customization_total
+        subtotal = unit_price * quantity
 
         order_items.append({
+            "cart_item_id": cart_item.get(
+                "cart_item_id",
+                cart_item["food_id"]
+            ),
             "food_id": str(food["_id"]),
             "name": food.get("name") or food.get("food_name", "Food"),
             "category": food.get("category", ""),
-            "price": price,
+            "base_price": base_price,
+            "customization_total": customization_total,
+            "price": unit_price,
             "quantity": quantity,
+            "customizations": customizations,
+            "special_instructions": cart_item.get(
+                "special_instructions", ""
+            ),
             "subtotal": subtotal
         })
 

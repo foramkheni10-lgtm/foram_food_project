@@ -46,7 +46,6 @@ async def submit_feedback(
             detail="Order not found."
         )
 
-    # Allow feedback only after order completion
     order_status = str(
         order.get("order_status", "")
     ).strip().lower()
@@ -63,7 +62,6 @@ async def submit_feedback(
             detail="You can submit feedback only after your order is completed."
         )
 
-    # Prevent duplicate feedback
     existing_feedback = await database.feedback.find_one({
         "order_id": request.order_id,
         "customer_id": customer_id
@@ -117,12 +115,15 @@ async def get_my_feedback(
         "feedback": feedback_list
     }
 
+
 @router.get("/public")
 async def get_public_feedback():
+
     cursor = database.feedback.find(
         {},
         {
             "_id": 0,
+            "customer_id": 1,
             "customer_name": 1,
             "rating": 1,
             "comment": 1,
@@ -134,6 +135,67 @@ async def get_public_feedback():
 
     async for feedback in cursor:
         feedback_list.append(feedback)
+
+    # Collect customer IDs
+    customer_ids = {
+        feedback.get("customer_id")
+        for feedback in feedback_list
+        if feedback.get("customer_id")
+    }
+
+    # Convert valid IDs to MongoDB ObjectIds
+    object_ids = []
+
+    for customer_id in customer_ids:
+        if ObjectId.is_valid(customer_id):
+            object_ids.append(ObjectId(customer_id))
+
+    # Fetch customer profiles
+    users = {}
+
+    if object_ids:
+        user_cursor = database.users.find(
+            {
+                "_id": {"$in": object_ids}
+            },
+            {
+                "_id": 1,
+                "profile_image": 1,
+                "profile_image_url": 1,
+                "profile_picture": 1,
+                "profile_picture_url": 1,
+                "avatar": 1,
+                "avatar_url": 1,
+                "image": 1,
+                "photo": 1
+            }
+        )
+
+        async for user in user_cursor:
+            users[str(user["_id"])] = user
+
+    # Attach profile images to feedback
+    for feedback in feedback_list:
+
+        customer_id = feedback.get("customer_id", "")
+        user = users.get(customer_id, {})
+
+        profile_image = (
+            user.get("profile_image_url")
+            or user.get("profile_image")
+            or user.get("profile_picture_url")
+            or user.get("profile_picture")
+            or user.get("avatar_url")
+            or user.get("avatar")
+            or user.get("image")
+            or user.get("photo")
+            or ""
+        )
+
+        feedback["profile_image"] = profile_image
+
+        # Do not expose internal customer IDs publicly
+        feedback.pop("customer_id", None)
 
     return {
         "success": True,

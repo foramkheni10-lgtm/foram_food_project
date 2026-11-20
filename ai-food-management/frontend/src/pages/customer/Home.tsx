@@ -46,6 +46,13 @@ interface CustomerFeedback {
   rating: number;
   comment?: string;
   created_at?: string;
+
+  profile_image?: string;
+  profile_image_url?: string;
+  customer_image?: string;
+  customer_profile_image?: string;
+  avatar?: string;
+  avatar_url?: string;
 }
 
 interface FeedbackResponse {
@@ -215,6 +222,27 @@ useEffect(() => {
   
   // Restaurant names for trusted-partners strip
   const partnerRestaurants = restaurants.slice(0, 8);
+  const getCustomerImage = (item: CustomerFeedback) => {
+  const image =
+    item.profile_image_url ||
+    item.profile_image ||
+    item.customer_profile_image ||
+    item.customer_image ||
+    item.avatar_url ||
+    item.avatar;
+
+  if (!image) return "";
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("data:")
+  ) {
+    return image;
+  }
+
+  return `http://127.0.0.1:8000/${image.replace(/^\/+/, "")}`;
+};
   
   // One scroll-reveal observer for all animated homepage elements
   useEffect(() => {
@@ -952,9 +980,28 @@ const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
   key={`${item.created_at}-${index}`}
 >
   <div className="feedback-customer">
-    <div className="feedback-avatar">
-      {(item.customer_name || "C").charAt(0).toUpperCase()}
-    </div>
+   <div className="feedback-avatar">
+  {getCustomerImage(item) ? (
+    <img
+      src={getCustomerImage(item)}
+      alt={item.customer_name || "Customer"}
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+        if (fallback) fallback.style.display = "flex";
+      }}
+    />
+  ) : null}
+
+  <span
+    className="feedback-avatar-fallback"
+    style={{
+      display: getCustomerImage(item) ? "none" : "flex",
+    }}
+  >
+    {(item.customer_name || "C").charAt(0).toUpperCase()}
+  </span>
+</div>
 
     <h3>{item.customer_name || "Customer"}</h3>
   </div>

@@ -10,7 +10,7 @@ interface Customer {
   name?: string;
   email?: string;
   phone?: string;
-  profile_completed?: boolean;
+  profile_image?: string;
 }
 
 function CustomerLayout() {
@@ -182,44 +182,55 @@ function CustomerLayout() {
 
           {/* AUTH BUTTONS */}
           <div className="sf-auth-actions">
-            {customer ? (
-              <>
-                <Link
-                  to="/profile"
-                  className="sf-profile-button"
-                  onClick={closeMobileMenu}
-                >
-                  Profile
-                </Link>
+  {customer ? (
+    <>
+      <button
+        type="button"
+        className="sf-login-button"
+        onClick={handleLogout}
+      >
+        Logout
+      </button>
 
-                <button
-                  type="button"
-                  className="sf-login-button"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="sf-login-button"
-                  onClick={closeMobileMenu}
-                >
-                  Login
-                </Link>
+      <Link
+        to="/profile"
+        className="sf-header-profile"
+        onClick={closeMobileMenu}
+        title="My Profile"
+      >
+        <img
+          src={
+            customer.profile_image
+              ? `http://127.0.0.1:8000${customer.profile_image}`
+              : "/default-profile.png"
+          }
+          alt="Profile"
+          onError={(e) => {
+            e.currentTarget.src = "/default-profile.png";
+          }}
+        />
+      </Link>
+    </>
+  ) : (
+    <>
+      <Link
+        to="/login"
+        className="sf-login-button"
+        onClick={closeMobileMenu}
+      >
+        Login
+      </Link>
 
-                <Link
-                  to="/register"
-                  className="sf-register-button"
-                  onClick={closeMobileMenu}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
+      <Link
+        to="/register"
+        className="sf-register-button"
+        onClick={closeMobileMenu}
+      >
+        Sign Up
+      </Link>
+    </>
+  )}
+</div>
 
           {/* MOBILE LOGOUT */}
           {customer && mobileMenuOpen && (

@@ -660,3 +660,31 @@
   margin: 0;
   font-size: 12px;
 }
+.checkout-customizations,
+.checkout-instructions {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #faf5ef;
+  border-radius: 8px;
+}
+
+.checkout-customizations strong,
+.checkout-instructions strong {
+  display: block;
+  color: #a94729;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.checkout-customizations p,
+.checkout-instructions p {
+  margin: 4px 0;
+  color: #68615b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.checkout-instructions {
+  border-left: 3px solid #c65d3a;
+  background: #fffaf5;
+}

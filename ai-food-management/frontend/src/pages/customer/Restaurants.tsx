@@ -94,12 +94,12 @@ function Restaurants() {
             <Search size={21} />
 
             <input
-              type="search"
-              placeholder="Search by restaurant or location..."
-              aria-label="Search restaurants"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
+  type="text"
+  placeholder="Search by restaurant...."
+  aria-label="Search restaurants"
+  value={searchQuery}
+  onChange={(event) => setSearchQuery(event.target.value)}
+/>
 
             {searchQuery && (
               <button

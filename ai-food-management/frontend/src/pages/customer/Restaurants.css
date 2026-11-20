@@ -593,3 +593,20 @@
     height: 44px;
   }
 }
+.restaurant-search input:focus,
+.restaurant-search input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.restaurants-search input {
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.restaurants-search input:focus,
+.restaurants-search input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

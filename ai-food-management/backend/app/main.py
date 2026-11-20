@@ -1,4 +1,5 @@
-
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -21,6 +22,7 @@ from app.routes.customer import profile
 from app.routes.customer import cart
 from app.routes.customer import orders
 from app.routes.customer import feedback
+from app.routes.customer import favorites
 # -------------------------------------------------
 # Application startup and shutdown
 # -------------------------------------------------
@@ -47,7 +49,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # -------------------------------------------------
 # CORS Configuration
 # -------------------------------------------------
@@ -97,6 +103,7 @@ app.include_router(profile.router)
 app.include_router(cart.router)
 app.include_router(orders.router)
 app.include_router(feedback.router)
+app.include_router(favorites.router)
 # -------------------------------------------------
 # Home API
 # -------------------------------------------------

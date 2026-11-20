@@ -25,11 +25,23 @@ interface Customer {
   phone?: string;
 }
 
+interface Customization {
+  group?: string;
+  name?: string;
+  option: string;
+  additional_price: number;
+}
+
 interface CartItem {
+  cart_item_id?: string;
   food_id: string;
   name: string;
   category: string;
   price: number;
+  base_price?: number;
+  customization_total?: number;
+  customizations?: Customization[];
+  special_instructions?: string;
   quantity: number;
   subtotal: number;
 }
@@ -718,70 +730,97 @@ function Checkout() {
         </section>
 
         {/* ORDER SUMMARY */}
-        <aside className="checkout-card checkout-summary">
-          <h2>Your Order</h2>
+        {/* ORDER SUMMARY */}
+<aside className="checkout-card checkout-summary">
+  <h2>Your Order</h2>
 
-          {cart.items.map(item => (
-            <div className="checkout-food" key={item.food_id}>
-              <div>
-                <strong>{item.name}</strong>
-                <span>Quantity: {item.quantity}</span>
-              </div>
-              <strong>₹{item.subtotal.toFixed(2)}</strong>
-            </div>
-          ))}
+  {cart.items.map((item, index) => (
+    <div
+      className="checkout-food"
+      key={item.cart_item_id || `${item.food_id}-${index}`}
+    >
+      <div>
+        <strong>{item.name}</strong>
+        <span>Quantity: {item.quantity}</span>
 
-          <div className="checkout-total-row">
-            <span>Total Items</span>
-            <strong>{cart.total_items}</strong>
+        {item.customizations && item.customizations.length > 0 && (
+          <div className="checkout-customizations">
+            <strong>Customizations</strong>
+
+            {item.customizations.map((option, optionIndex) => (
+              <p key={optionIndex}>
+  {option.group || option.name || "Option"}: {option.option}
+  {Number(option.additional_price) > 0 &&
+    ` (+₹${Number(option.additional_price).toFixed(2)})`}
+</p>
+            ))}
           </div>
+        )}
 
-          <div className="checkout-total-row">
-            <span>Subtotal</span>
-            <strong>₹{cart.total_price.toFixed(2)}</strong>
+        {item.special_instructions && (
+          <div className="checkout-instructions">
+            <strong>Special Instructions</strong>
+            <p>{item.special_instructions}</p>
           </div>
+        )}
+      </div>
 
-          <div className="checkout-grand-total">
-            <span>Total Amount</span>
-            <strong>₹{cart.total_price.toFixed(2)}</strong>
-          </div>
+      <strong>₹{Number(item.subtotal).toFixed(2)}</strong>
+    </div>
+  ))}
 
-          <div className="checkout-selected-details">
-            <p>
-              <span>Order Type</span>
-              <strong>{deliveryLabel(deliveryType)}</strong>
-            </p>
-            <p>
-              <span>Payment</span>
-              <strong>{paymentMethod}</strong>
-            </p>
+  <div className="checkout-total-row">
+    <span>Total Items</span>
+    <strong>{cart.total_items}</strong>
+  </div>
 
-            {deliveryType === "dine_in" && tableNumber && (
-              <p>
-                <span>Selected Table</span>
-                <strong>Table {tableNumber}</strong>
-              </p>
-            )}
-          </div>
+  <div className="checkout-total-row">
+    <span>Subtotal</span>
+    <strong>₹{Number(cart.total_price).toFixed(2)}</strong>
+  </div>
 
-          <button
-            className="place-order-button"
-            onClick={placeOrder}
-            disabled={
-              placingOrder ||
-              cart.items.length === 0 ||
-              (deliveryType === "dine_in" &&
-                (!tableNumber || loadingTables)) ||
-              (deliveryType === "delivery" && !addressSaved)
-            }
-          >
-            {placingOrder ? "Placing Order..." : "Place Order"}
-          </button>
+  <div className="checkout-grand-total">
+    <span>Total Amount</span>
+    <strong>₹{Number(cart.total_price).toFixed(2)}</strong>
+  </div>
 
-          <p className="checkout-note">
-            Please review your order details before placing your order.
-          </p>
-        </aside>
+  <div className="checkout-selected-details">
+    <p>
+      <span>Order Type</span>
+      <strong>{deliveryLabel(deliveryType)}</strong>
+    </p>
+
+    <p>
+      <span>Payment</span>
+      <strong>{paymentMethod}</strong>
+    </p>
+
+    {deliveryType === "dine_in" && tableNumber && (
+      <p>
+        <span>Selected Table</span>
+        <strong>Table {tableNumber}</strong>
+      </p>
+    )}
+  </div>
+
+  <button
+    className="place-order-button"
+    onClick={placeOrder}
+    disabled={
+      placingOrder ||
+      cart.items.length === 0 ||
+      (deliveryType === "dine_in" &&
+        (!tableNumber || loadingTables)) ||
+      (deliveryType === "delivery" && !addressSaved)
+    }
+  >
+    {placingOrder ? "Placing Order..." : "Place Order"}
+  </button>
+
+  <p className="checkout-note">
+    Please review your order details before placing your order.
+  </p>
+</aside>
       </div>
     </main>
   );

@@ -7925,3 +7925,59 @@
     transform: translateY(0);
   }
 }
+.sf-header-profile {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #c65d3a;
+  margin-left: 10px;
+  transition: transform 0.25s ease;
+}
+
+.sf-header-profile:hover {
+  transform: scale(1.08);
+}
+
+.sf-header-profile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+/* Customer profile photos in feedback cards */
+
+.feedback-avatar {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f3e5dc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.feedback-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #b95736;
+  font-size: 20px;
+  font-weight: 700;
+}

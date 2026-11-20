@@ -6,13 +6,25 @@ import { Star, Send } from "lucide-react";
 import "./MyOrders.css";
 import LiveDeliveryMap from "./LiveDeliveryMap";
 
+interface Customization {
+  group?: string;
+  name?: string;
+  option: string;
+  additional_price: number;
+}
+
 interface OrderItem {
+  cart_item_id?: string;
   food_id: string;
   name: string;
   category: string;
   price: number;
+  base_price?: number;
+  customization_total?: number;
   quantity: number;
   subtotal: number;
+  customizations?: Customization[];
+  special_instructions?: string;
 }
 
 interface Order {
@@ -289,20 +301,24 @@ function MyOrders() {
       <div className="orders-container">
 
         {/* PAGE HEADER */}
-        <div className="orders-heading">
-          <div>
-            <span className="orders-eyebrow">SMART FOODCOURT</span>
-            <h1>My Orders</h1>
-            <p>Track and manage all your food orders.</p>
-          </div>
+        {/* PAGE HERO */}
+<section className="orders-hero">
+  <span className="orders-hero-eyebrow">
+    <Star size={15} />
+    SMART FOODCOURT • ORDER HISTORY
+  </span>
 
-          <button
-            className="orders-menu-button"
-            onClick={() => navigate("/menu")}
-          >
-            Explore Menu
-          </button>
-        </div>
+  <h1>
+    Your Orders, <span>Made Delicious</span>
+  </h1>
+
+  <p>
+    Track your food orders, follow delivery progress
+    and revisit your delicious experiences.
+  </p>
+
+  
+</section>
 
         {/* ORDER COUNT */}
         <div className="orders-count">
@@ -496,24 +512,45 @@ function MyOrders() {
                       <h4>Ordered Items</h4>
 
                       {order.items.map((item, index) => (
-                        <div
-                          className="order-food-item"
-                          key={`${item.food_id}-${index}`}
-                        >
-                          <div>
-                            <strong>{item.name}</strong>
+  <div
+    className="order-food-item"
+    key={item.cart_item_id || `${item.food_id}-${index}`}
+  >
+    <div>
+      <strong>{item.name}</strong>
 
-                            <span>
-                              ₹{Number(item.price).toFixed(2)} ×{" "}
-                              {item.quantity}
-                            </span>
-                          </div>
+      <span>
+        ₹{Number(item.price).toFixed(2)} × {item.quantity}
+      </span>
 
-                          <strong>
-                            ₹{Number(item.subtotal).toFixed(2)}
-                          </strong>
-                        </div>
-                      ))}
+      {item.customizations && item.customizations.length > 0 && (
+        <div className="order-customizations">
+          <strong>Customizations</strong>
+
+          {item.customizations.map((option, optionIndex) => (
+            <p key={optionIndex}>
+              {option.group || option.name || "Option"}: {option.option}
+
+              {Number(option.additional_price) > 0 &&
+                ` (+₹${Number(option.additional_price).toFixed(2)})`}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {item.special_instructions && (
+        <div className="order-special-instructions">
+          <strong>Special Instructions</strong>
+          <p>{item.special_instructions}</p>
+        </div>
+      )}
+    </div>
+
+    <strong>
+      ₹{Number(item.subtotal).toFixed(2)}
+    </strong>
+  </div>
+))}
 
                       <div className="order-detail-total">
                         <span>Total</span>
