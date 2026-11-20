@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import "./Profile.css";
 
-const API = "http://127.0.0.1:8000";
+const API = "https://foram-food-project.onrender.com";
 
 interface Customer {
   name?: string;

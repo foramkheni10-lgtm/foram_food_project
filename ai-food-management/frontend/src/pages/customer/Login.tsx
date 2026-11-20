@@ -40,7 +40,7 @@ function Login() {
       setLoading(true);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/customer/login",
+        "https://foram-food-project.onrender.com/customer/login",
         {
           email: email.trim(),
           password

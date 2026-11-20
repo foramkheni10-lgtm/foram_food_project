@@ -47,7 +47,7 @@ interface SpeechWindow extends Window {
   webkitSpeechRecognition?: new () => SpeechRecognitionLike;
 }
 
-const API_URL = "http://127.0.0.1:8000/api/ai-assistant/chat";
+const API_URL = "https://foram-food-project.onrender.com/api/ai-assistant/chat";
 
 function AIFoodAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,7 +83,7 @@ function AIFoodAssistant() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/cart/items",
+        "https://foram-food-project.onrender.com/api/cart/items",
         { food_id: food.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -141,7 +141,7 @@ function AIFoodAssistant() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/ai-assistant/avatar/speak",
+        "https://foram-food-project.onrender.com/api/ai-assistant/avatar/speak",
         { text },
         {
           responseType: "blob",

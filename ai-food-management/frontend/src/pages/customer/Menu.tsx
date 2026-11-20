@@ -50,7 +50,7 @@ interface SelectedCustomization {
   additional_price: number;
 }
 
-const API = "http://127.0.0.1:8000";
+const API = "https://foram-food-project.onrender.com";
 
 const customizationGroups: Record<string, CustomGroup[]> = {
   pizza: [

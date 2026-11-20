@@ -201,7 +201,7 @@ function CustomerLayout() {
         <img
           src={
             customer.profile_image
-              ? `http://127.0.0.1:8000${customer.profile_image}`
+              ? `https://foram-food-project.onrender.com${customer.profile_image}`
               : "/default-profile.png"
           }
           alt="Profile"

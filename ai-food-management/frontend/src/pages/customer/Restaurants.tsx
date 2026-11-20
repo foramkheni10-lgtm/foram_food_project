@@ -33,7 +33,7 @@ function Restaurants() {
         setError("");
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/restaurants/"
+          "https://foram-food-project.onrender.com/api/restaurants/"
         );
 
         if (!response.ok) {

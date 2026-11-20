@@ -94,7 +94,7 @@ function MyOrders() {
   const fetchFeedback = async (token: string) => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/feedback/my-feedback",
+        "https://foram-food-project.onrender.com/api/feedback/my-feedback",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -120,7 +120,7 @@ function MyOrders() {
 
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/orders/my-orders",
+          "https://foram-food-project.onrender.com/api/orders/my-orders",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -234,7 +234,7 @@ function MyOrders() {
       setSubmittingOrder(orderId);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/feedback/submit",
+        "https://foram-food-project.onrender.com/api/feedback/submit",
         {
           order_id: orderId,
           rating,

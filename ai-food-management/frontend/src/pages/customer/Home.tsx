@@ -126,7 +126,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/restaurants/");
+        const response = await fetch("https://foram-food-project.onrender.com/api/restaurants/");
         if (!response.ok) throw new Error("Unable to fetch restaurants.");
         const data: RestaurantResponse = await response.json();
         setRestaurants(data.restaurants || []);
@@ -143,7 +143,7 @@ useEffect(() => {
     const fetchFoods = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/api/foods/"
+          "https://foram-food-project.onrender.com/api/foods/"
         );
 
         if (!response.ok) {
@@ -167,7 +167,7 @@ useEffect(() => {
   const fetchCustomerFeedback = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/feedback/public"
+        "https://foram-food-project.onrender.com/api/feedback/public"
       );
 
       if (!response.ok) {
@@ -241,7 +241,7 @@ useEffect(() => {
     return image;
   }
 
-  return `http://127.0.0.1:8000/${image.replace(/^\/+/, "")}`;
+  return `https://foram-food-project.onrender.com/${image.replace(/^\/+/, "")}`;
 };
   
   // One scroll-reveal observer for all animated homepage elements

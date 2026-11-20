@@ -64,7 +64,7 @@ interface FoodRecord {
   photo?: string;
 }
 
-const API = "http://127.0.0.1:8000";
+const API = "https://foram-food-project.onrender.com";
 
 const customizationOptions: Record<string, CustomizationGroup[]> = {
   pizza: [

@@ -105,7 +105,7 @@ function Register() {
       setLoading(true);
 
       await axios.post(
-        "http://127.0.0.1:8000/customer/register",
+        "https://foram-food-project.onrender.com/customer/register",
         {
           name: name.trim(),
           email: email.trim(),

@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Checkout.css";
 
-const API = "http://127.0.0.1:8000";
+const API = "https://foram-food-project.onrender.com";
 
 type DeliveryType = "dine_in" | "take_away" | "delivery";
 type PaymentMethod = "Cash on Delivery" | "UPI" | "Debit Card";

@@ -90,7 +90,7 @@ function LiveDeliveryMap({
         }
 
         const response = await fetch(
-          `http://127.0.0.1:8000/api/orders/${orderId}/demo-complete`,
+          `https://foram-food-project.onrender.com/api/orders/${orderId}/demo-complete`,
           {
             method: "POST",
             headers: {
