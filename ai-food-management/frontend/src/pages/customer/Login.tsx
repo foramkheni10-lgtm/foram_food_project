@@ -5,7 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./Login.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://foram-food-project.onrender.com";
 
 interface CaptchaData {
   captcha_id: string;

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import "./Kitchen.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://foram-food-project.onrender.com";
 
 interface KitchenIngredient {
   ingredient_name: string;

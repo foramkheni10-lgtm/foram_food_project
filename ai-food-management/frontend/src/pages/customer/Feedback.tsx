@@ -4,7 +4,7 @@ import { Star, MessageSquare, Send } from "lucide-react";
 import "./Feedback.css";
 
 // Local FastAPI backend
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://foram-food-project.onrender.com";
 
 interface Order {
   order_id: string;

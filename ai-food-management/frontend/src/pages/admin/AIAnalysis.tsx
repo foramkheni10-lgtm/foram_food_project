@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import "./AIAnalysis.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://foram-food-project.onrender.com";
 
 interface InventoryItem {
   ingredient_name: string;

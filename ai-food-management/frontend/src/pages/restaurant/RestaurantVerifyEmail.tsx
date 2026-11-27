@@ -4,7 +4,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "../../styles/restaurant/auth.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://foram-food-project.onrender.com";
 
 const RestaurantVerifyEmail: React.FC = () => {
   const location = useLocation();
