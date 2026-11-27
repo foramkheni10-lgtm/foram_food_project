@@ -1,5 +1,11 @@
 
-import { useState, useEffect, type FormEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  type FormEvent,
+} from "react";
+
 import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -13,7 +19,11 @@ interface CaptchaData {
   expires_in: number;
 }
 
-type AccountType = "customer" | "admin" | "restaurant" | "inventory";
+type AccountType =
+  | "customer"
+  | "admin"
+  | "restaurant"
+  | "inventory";
 
 function Login() {
   const navigate = useNavigate();
@@ -38,53 +48,113 @@ function Login() {
   const [captchaLoading, setCaptchaLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const successMessage = location.state?.message as string | undefined;
+  const captchaRequestRef = useRef(0);
+
+  const successMessage = location.state?.message as
+    | string
+    | undefined;
 
   // --------------------------------------------------
   // REFRESH CAPTCHA
   // --------------------------------------------------
 
-  const refreshCaptcha = async () => {
-  setCaptchaLoading(true);
-  setCaptchaId("");
-  setCaptchaImage("");
-  setCaptchaAnswer("");
+  const refreshCaptcha = async (
+    type: AccountType = accountType
+  ) => {
+    const requestId = ++captchaRequestRef.current;
 
-  try {
-    const response = await axios.get<CaptchaData>(
-      `${API_URL}/customer/captcha`,
-      { timeout: 20000 }
-    );
-
-    if (!response.data?.captcha_id || !response.data?.captcha_image) {
-      throw new Error("Invalid CAPTCHA response from server.");
-    }
-
-    setCaptchaId(response.data.captcha_id);
-    setCaptchaImage(response.data.captcha_image);
-    setError("");
-  } catch (err) {
-    console.error("CAPTCHA loading failed:", err);
-
+    setCaptchaLoading(true);
     setCaptchaId("");
     setCaptchaImage("");
-    setError(
-      "CAPTCHA could not load. Please click the refresh button and try again."
-    );
-  } finally {
-    setCaptchaLoading(false);
-  }
-};
+    setCaptchaAnswer("");
+
+    const captchaEndpoint =
+      type === "restaurant"
+        ? `${API_URL}/api/restaurants/captcha`
+        : `${API_URL}/customer/captcha`;
+
+    try {
+      const response = await axios.get<CaptchaData>(
+        captchaEndpoint,
+        {
+          timeout: 60000,
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        }
+      );
+
+      // Ignore outdated responses.
+      if (requestId !== captchaRequestRef.current) {
+        return;
+      }
+
+      const data = response.data;
+
+      if (
+        !data ||
+        typeof data.captcha_id !== "string" ||
+        typeof data.captcha_image !== "string" ||
+        !data.captcha_id ||
+        !data.captcha_image.startsWith("data:image/")
+      ) {
+        throw new Error("Invalid CAPTCHA response.");
+      }
+
+      setCaptchaId(data.captcha_id);
+      setCaptchaImage(data.captcha_image);
+      setCaptchaAnswer("");
+      setError("");
+
+    } catch (err) {
+      if (requestId !== captchaRequestRef.current) {
+        return;
+      }
+
+      console.error("CAPTCHA loading failed:", err);
+
+      setCaptchaId("");
+      setCaptchaImage("");
+
+      if (axios.isAxiosError(err) && !err.response) {
+        setError(
+          "Server is waking up or unavailable. Please refresh CAPTCHA again."
+        );
+      } else {
+        setError(
+          "Unable to load CAPTCHA. Please try again."
+        );
+      }
+
+    } finally {
+      if (requestId === captchaRequestRef.current) {
+        setCaptchaLoading(false);
+      }
+    }
+  };
+
+  // --------------------------------------------------
+  // INITIAL CAPTCHA
+  // --------------------------------------------------
 
   useEffect(() => {
-    refreshCaptcha();
+    void refreshCaptcha("customer");
+
+    return () => {
+      captchaRequestRef.current++;
+    };
   }, []);
 
   // --------------------------------------------------
   // ACCOUNT TYPE CHANGE
   // --------------------------------------------------
 
-  const handleAccountTypeChange = (value: AccountType) => {
+  const handleAccountTypeChange = (
+    value: AccountType
+  ) => {
+    captchaRequestRef.current++;
+
     setAccountType(value);
     setError("");
     setSubmitted(false);
@@ -95,7 +165,7 @@ function Login() {
     setCaptchaImage("");
     setShowPassword(false);
 
-    refreshCaptcha();
+    void refreshCaptcha(value);
   };
 
   // --------------------------------------------------
@@ -103,7 +173,9 @@ function Login() {
   // --------------------------------------------------
 
   const errors = {
-    email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      email.trim()
+    )
       ? "Enter a valid email address."
       : "",
 
@@ -116,14 +188,17 @@ function Login() {
       : "",
   };
 
-  const showError = (field: keyof typeof errors) =>
-    (touched[field] || submitted) && errors[field];
+  const showError = (
+    field: keyof typeof errors
+  ) => (touched[field] || submitted) && errors[field];
 
   // --------------------------------------------------
   // LOGIN
   // --------------------------------------------------
 
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     setSubmitted(true);
@@ -133,7 +208,7 @@ function Login() {
       return;
     }
 
-    if (!captchaId || !captchaImage) {
+    if (!captchaId || !captchaImage || captchaLoading) {
       setError("Please wait for CAPTCHA to load.");
       return;
     }
@@ -156,7 +231,8 @@ function Login() {
       if (accountType === "restaurant") {
         const response = await axios.post(
           `${API_URL}/api/restaurants/login`,
-          loginData
+          loginData,
+          { timeout: 60000 }
         );
 
         const data = response.data;
@@ -166,18 +242,30 @@ function Login() {
           return;
         }
 
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("restaurantId", data.restaurant_id);
+        localStorage.setItem(
+          "token",
+          data.access_token
+        );
+
+        localStorage.setItem(
+          "restaurantId",
+          data.restaurant_id
+        );
+
         localStorage.setItem(
           "restaurantName",
           data.restaurantName || ""
         );
+
         localStorage.setItem(
           "restaurantEmail",
           email.trim().toLowerCase()
         );
 
-        navigate("/restaurant/dashboard", { replace: true });
+        navigate("/restaurant/dashboard", {
+          replace: true,
+        });
+
         return;
       }
 
@@ -190,13 +278,16 @@ function Login() {
         {
           ...loginData,
           account_type: accountType,
-        }
+        },
+        { timeout: 60000 }
       );
 
       const data = response.data;
 
       if (!data.access_token) {
-        setError("Login response did not contain an access token.");
+        setError(
+          "Login response did not contain an access token."
+        );
         return;
       }
 
@@ -210,7 +301,9 @@ function Login() {
         JSON.stringify(data.user)
       );
 
-      navigate(data.next_page || "/", { replace: true });
+      navigate(data.next_page || "/", {
+        replace: true,
+      });
 
     } catch (err: unknown) {
       let message = "Login failed. Please try again.";
@@ -223,13 +316,12 @@ function Login() {
         } else if (err.response?.status === 500) {
           message = "Server error. Please try again later.";
         } else if (!err.response) {
-          message = "Unable to connect to the server.";
+          message =
+            "Unable to connect to the server. Please try again.";
         }
       }
 
       setError(message);
-
-      await refreshCaptcha();
 
       setTouched((prev) => ({
         ...prev,
@@ -237,6 +329,9 @@ function Login() {
       }));
 
       setSubmitted(false);
+
+      // Get a fresh CAPTCHA after failed login.
+      await refreshCaptcha(accountType);
 
     } finally {
       setLoading(false);
@@ -391,7 +486,9 @@ function Login() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) =>
+                      setPassword(e.target.value)
+                    }
                     onBlur={() =>
                       setTouched((prev) => ({
                         ...prev,
@@ -455,11 +552,17 @@ function Login() {
                   <button
                     type="button"
                     className="captcha-refresh"
-                    onClick={refreshCaptcha}
+                    onClick={() => void refreshCaptcha()}
                     disabled={captchaLoading || loading}
                     title="Refresh CAPTCHA"
+                    aria-label="Refresh CAPTCHA"
                   >
-                    <RefreshCw size={18} />
+                    <RefreshCw
+                      size={18}
+                      className={
+                        captchaLoading ? "captcha-spinning" : ""
+                      }
+                    />
                   </button>
                 </div>
 
@@ -468,7 +571,9 @@ function Login() {
                   type="text"
                   value={captchaAnswer}
                   onChange={(e) =>
-                    setCaptchaAnswer(e.target.value.toUpperCase())
+                    setCaptchaAnswer(
+                      e.target.value.toUpperCase()
+                    )
                   }
                   onBlur={() =>
                     setTouched((prev) => ({
@@ -480,7 +585,9 @@ function Login() {
                   maxLength={6}
                   autoComplete="off"
                   disabled={loading}
-                  className={showError("captcha") ? "input-error" : ""}
+                  className={
+                    showError("captcha") ? "input-error" : ""
+                  }
                 />
 
                 {showError("captcha") && (
@@ -511,10 +618,19 @@ function Login() {
 
               <button
                 type="submit"
-                disabled={loading || captchaLoading || !captchaId}
+                disabled={
+                  loading ||
+                  captchaLoading ||
+                  !captchaId ||
+                  !captchaImage
+                }
                 className="auth-submit-btn"
               >
-                {loading ? "Logging in..." : loginButtonText}
+                {loading
+                  ? "Logging in..."
+                  : captchaLoading
+                    ? "Loading CAPTCHA..."
+                    : loginButtonText}
               </button>
 
             </form>
