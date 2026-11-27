@@ -1,284 +1,127 @@
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
+from pydantic import BaseModel, Field
 from bson import ObjectId
 
 from app.database import database
-from app.routes.restaurant.restaurant import SECRET_KEY, ALGORITHM
+from app.security import get_current_customer
 
 
 router = APIRouter(
-    prefix="/api/restaurant-feedback",
-    tags=["Restaurant Feedback"]
+    prefix="/api/feedback",
+    tags=["Customer Feedback"]
 )
 
-security = HTTPBearer(auto_error=False)
+
+class FeedbackRequest(BaseModel):
+    order_id: str
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(default="", max_length=1000)
 
 
-# ==========================================================
-# VERIFY RESTAURANT LOGIN TOKEN
-# ==========================================================
-
-async def get_current_restaurant(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+@router.post("/submit")
+async def submit_feedback(
+    data: FeedbackRequest,
+    customer=Depends(get_current_customer)
 ):
-    if not credentials:
-        raise HTTPException(
-            status_code=401,
-            detail="Restaurant login required"
-        )
+    if not ObjectId.is_valid(data.order_id):
+        raise HTTPException(status_code=400, detail="Invalid order ID")
 
-    try:
-        payload = jwt.decode(
-            credentials.credentials,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
-        restaurant_id = payload.get("restaurant_id")
-
-        if not restaurant_id or not ObjectId.is_valid(restaurant_id):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid restaurant token"
-            )
-
-    except JWTError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired restaurant token"
-        )
-
-    restaurant = await database.restaurants.find_one({
-        "_id": ObjectId(restaurant_id)
+    order = await database.orders.find_one({
+        "_id": ObjectId(data.order_id)
     })
 
-    if not restaurant:
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    customer_id = str(customer["_id"])
+
+    # Verify that this order belongs to the logged-in customer.
+    order_customer_id = str(order.get("customer_id", ""))
+
+    if order_customer_id != customer_id:
         raise HTTPException(
-            status_code=401,
-            detail="Restaurant account not found"
+            status_code=403,
+            detail="You cannot review another customer's order"
         )
 
-    return restaurant
+    status = str(order.get("order_status", "")).strip().lower()
 
+    if status not in ["delivered", "completed", "complete"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Feedback is available only after order completion"
+        )
 
-# ==========================================================
-# HELPER: FIND CUSTOMER PROFILE IMAGE
-# ==========================================================
+    existing = await database.feedback.find_one({
+        "order_id": data.order_id
+    })
 
-async def get_customer_profile(customer_id):
-    if not customer_id:
-        return ""
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="You have already submitted feedback for this order"
+        )
 
-    user = None
-
-    if ObjectId.is_valid(str(customer_id)):
-        user = await database.users.find_one({
-            "_id": ObjectId(str(customer_id))
-        })
-
-    if not user:
-        user = await database.users.find_one({
-            "_id": str(customer_id)
-        })
-
-    if not user:
-        return ""
-
-    return (
-        user.get("profile_image_url")
-        or user.get("profile_image")
-        or user.get("profile_picture_url")
-        or user.get("profile_picture")
-        or user.get("avatar_url")
-        or user.get("avatar")
-        or user.get("image")
-        or user.get("photo")
-        or ""
-    )
-
-
-# ==========================================================
-# GET FEEDBACK FOR LOGGED-IN RESTAURANT
-# ==========================================================
-
-@router.get("/my-feedback")
-async def get_my_restaurant_feedback(
-    restaurant=Depends(get_current_restaurant)
-):
-
-    restaurant_id = str(restaurant["_id"])
+    restaurant_id = order.get("restaurant_id", "")
+    if isinstance(restaurant_id, ObjectId):
+        restaurant_id = str(restaurant_id)
 
     restaurant_name = (
-        restaurant.get("name")
-        or restaurant.get("restaurant_name")
-        or restaurant.get("restaurantName")
+        order.get("restaurant_name")
+        or order.get("restaurantName")
         or ""
     )
 
-    # Support both string and ObjectId restaurant IDs.
-    feedback_cursor = database.feedback.find({
-        "restaurant_id": {
-            "$in": [
-                restaurant_id,
-                ObjectId(restaurant_id)
-            ]
-        }
-    }).sort("created_at", -1)
+    feedback = {
+        "order_id": data.order_id,
+        "order_number": order.get("order_number", ""),
+        "customer_id": customer_id,
+        "customer_name": customer.get("name", "Customer"),
+        "customer_email": customer.get("email", ""),
+        "restaurant_id": restaurant_id,
+        "restaurant_name": restaurant_name,
+        "rating": data.rating,
+        "comment": data.comment.strip(),
+        "created_at": datetime.now(timezone.utc)
+    }
 
-    feedback_records = await feedback_cursor.to_list(length=500)
-
-    feedbacks = []
-
-    for item in feedback_records:
-
-        # --------------------------------------------------
-        # FETCH RELATED ORDER
-        # --------------------------------------------------
-
-        order = None
-        order_id = str(item.get("order_id", ""))
-
-        if ObjectId.is_valid(order_id):
-            order = await database.orders.find_one({
-                "_id": ObjectId(order_id)
-            })
-
-        if not order:
-            order = await database.orders.find_one({
-                "_id": order_id
-            })
-
-        # Verify that the order belongs to this restaurant.
-        if order:
-            order_restaurant_id = str(
-                order.get("restaurant_id", "")
-            )
-
-            if order_restaurant_id != restaurant_id:
-                continue
-
-        # --------------------------------------------------
-        # FOOD ITEM NAMES
-        # --------------------------------------------------
-
-        food_names = []
-
-        if order:
-            for order_item in order.get("items", []):
-                name = (
-                    order_item.get("name")
-                    or order_item.get("food_name")
-                    or ""
-                )
-
-                if name and name not in food_names:
-                    food_names.append(name)
-
-        food_name = ", ".join(food_names) if food_names else "Food item"
-
-        # --------------------------------------------------
-        # ORDER DATE
-        # --------------------------------------------------
-
-        order_date = (
-            order.get("created_at")
-            if order
-            else None
-        )
-
-        # --------------------------------------------------
-        # CUSTOMER DETAILS
-        # --------------------------------------------------
-
-        customer_id = (
-            item.get("customer_id")
-            or (order.get("customer_id") if order else "")
-        )
-
-        profile_image = await get_customer_profile(customer_id)
-
-        customer_name = (
-            item.get("customer_name")
-            or (order.get("customer_name") if order else "")
-            or "Customer"
-        )
-
-        customer_email = (
-            item.get("customer_email")
-            or (order.get("customer_email") if order else "")
-            or ""
-        )
-
-        # --------------------------------------------------
-        # FINAL FEEDBACK RESPONSE
-        # --------------------------------------------------
-
-        feedbacks.append({
-            "_id": str(item["_id"]),
-            "order_id": order_id,
-            "order_number": (
-                item.get("order_number")
-                or (order.get("order_number") if order else "")
-                or ""
-            ),
-
-            "order_date": order_date,
-            "order_created_at": order_date,
-
-            "customer_name": customer_name,
-            "customer_email": customer_email,
-            "customer_profile_image": profile_image,
-
-            "food_name": food_name,
-            "food_item_name": food_name,
-
-            "rating": int(item.get("rating", 0)),
-            "comment": item.get("comment", ""),
-
-            "created_at": item.get("created_at"),
-
-            "restaurant_name": (
-                item.get("restaurant_name")
-                or restaurant_name
-            )
-        })
-
-    # ======================================================
-    # CALCULATE FEEDBACK STATISTICS
-    # ======================================================
-
-    total_reviews = len(feedbacks)
-
-    average_rating = (
-        round(
-            sum(item["rating"] for item in feedbacks) / total_reviews,
-            1
-        )
-        if total_reviews
-        else 0
-    )
-
-    positive_reviews = sum(
-        1 for item in feedbacks
-        if item["rating"] >= 4
-    )
-
-    five_star_reviews = sum(
-        1 for item in feedbacks
-        if item["rating"] == 5
-    )
+    result = await database.feedback.insert_one(feedback)
 
     return {
         "success": True,
-        "restaurant_id": restaurant_id,
-        "restaurant_name": restaurant_name,
+        "message": "Thank you! Your feedback has been submitted successfully.",
+        "feedback_id": str(result.inserted_id)
+    }
 
-        "total_reviews": total_reviews,
-        "average_rating": average_rating,
-        "positive_reviews": positive_reviews,
-        "five_star_reviews": five_star_reviews,
 
-        "feedbacks": feedbacks
+@router.get("/my-feedback")
+async def get_my_feedback(
+    customer=Depends(get_current_customer)
+):
+    customer_id = str(customer["_id"])
+
+    cursor = database.feedback.find({
+        "customer_id": customer_id
+    }).sort("created_at", -1)
+
+    records = await cursor.to_list(length=500)
+
+    feedbacks = []
+
+    for item in records:
+        feedbacks.append({
+            "feedback_id": str(item["_id"]),
+            "order_id": str(item.get("order_id", "")),
+            "order_number": item.get("order_number", ""),
+            "rating": int(item.get("rating", 0)),
+            "comment": item.get("comment", ""),
+            "created_at": item.get("created_at")
+        })
+
+    return {
+        "success": True,
+        "feedback": feedbacks
     }

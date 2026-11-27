@@ -1,23 +1,18 @@
-
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
 import {
-  Menu,
-  X,
   LayoutDashboard,
-  UtensilsCrossed,
   ShoppingBag,
-  Table2,
-  MessageSquare,
-  ChartNoAxesCombined,
-  LogOut,
-  ChevronRight,
   Store,
+  Utensils,
+  Table,
+  MessageSquare,
+  Brain,
+  LogOut,
 } from "lucide-react";
 
+import { NavLink, useNavigate } from "react-router-dom";
 import "../../styles/restaurant/RestaurantSidebar.css";
 
-const navigationItems = [
+const menuItems = [
   {
     label: "Dashboard",
     path: "/restaurant/dashboard",
@@ -26,7 +21,7 @@ const navigationItems = [
   {
     label: "Menu Management",
     path: "/restaurant/menu",
-    icon: UtensilsCrossed,
+    icon: Utensils,
   },
   {
     label: "Orders",
@@ -34,9 +29,9 @@ const navigationItems = [
     icon: ShoppingBag,
   },
   {
-    label: "Tables",
+    label: "Table Monitoring",
     path: "/restaurant/tables",
-    icon: Table2,
+    icon: Table,
   },
   {
     label: "Customer Feedback",
@@ -44,155 +39,86 @@ const navigationItems = [
     icon: MessageSquare,
   },
   {
-    label: "AI Analytics",
+    label: "AI Insights",
     path: "/restaurant/ai-analytics",
-    icon: ChartNoAxesCombined,
+    icon: Brain,
   },
 ];
 
 function RestaurantSidebar() {
-  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-
-  const restaurantName =
-    localStorage.getItem("restaurantName") || "My Restaurant";
-
-  const closeSidebar = () => setIsOpen(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("restaurantId");
     localStorage.removeItem("restaurantName");
     localStorage.removeItem("restaurantEmail");
-    localStorage.removeItem("restaurant_token");
-    localStorage.removeItem("restaurantToken");
 
     navigate("/login", { replace: true });
   };
 
   return (
-    <>
-      {/* TOP HEADER */}
+    <aside className="restaurant-sidebar">
 
-      <header className="restaurant-topbar">
-        <div className="restaurant-topbar-brand">
-          <div className="restaurant-brand-logo">
-            <span>S</span>
-          </div>
+      {/* SIDEBAR HEADER */}
 
-          <div className="restaurant-brand-name">
-            <span>Smart</span> FoodCourt
-          </div>
-        </div>
+      <div className="restaurant-sidebar-header">
+        <div className="restaurant-sidebar-brand">
+          <img
+            src="/images/logo.png"
+            alt="Smart FoodCourt"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
 
-        <button
-          className="restaurant-menu-toggle"
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
-          aria-expanded={isOpen}
-        >
-          {isOpen ? <X size={29} /> : <Menu size={31} />}
-        </button>
-      </header>
-
-      {/* OVERLAY */}
-
-      <div
-        className={`restaurant-sidebar-overlay ${
-          isOpen ? "show" : ""
-        }`}
-        onClick={closeSidebar}
-      />
-
-      {/* SLIDE OUT SIDEBAR */}
-
-      <aside
-        className={`restaurant-sidebar ${
-          isOpen ? "open" : ""
-        }`}
-      >
-        <div className="restaurant-sidebar-heading">
           <div>
-            <span className="restaurant-sidebar-eyebrow">
-              RESTAURANT WORKSPACE
-            </span>
-            <h2>Navigation</h2>
-          </div>
-
-          <button
-            type="button"
-            className="restaurant-sidebar-close"
-            onClick={closeSidebar}
-            aria-label="Close sidebar"
-          >
-            <X size={21} />
-          </button>
-        </div>
-
-        {/* RESTAURANT PROFILE */}
-
-        <div className="restaurant-sidebar-profile">
-          <div className="restaurant-profile-icon">
-            <Store size={23} />
-          </div>
-
-          <div className="restaurant-profile-details">
-            <strong>{restaurantName}</strong>
-            <span>Restaurant Account</span>
+            <h2>Smart FoodCourt</h2>
+            <span>RESTAURANT PANEL</span>
           </div>
         </div>
+      </div>
 
-        {/* NAVIGATION */}
+      {/* RESTAURANT PROFILE */}
 
-        <div className="restaurant-sidebar-section-label">
+      
+      {/* NAVIGATION */}
+
+      <nav className="restaurant-sidebar-nav">
+        <p className="restaurant-sidebar-section-title">
           MAIN MENU
+        </p>
+
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === "/restaurant/dashboard"}
+              className={({ isActive }) =>
+                `restaurant-sidebar-link ${
+                  isActive ? "active" : ""
+                }`
+              }
+            >
+              <Icon size={19} strokeWidth={1.9} />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* SIDEBAR FOOTER */}
+
+      <div className="restaurant-sidebar-footer">
+        <div className="restaurant-sidebar-footer-info">
+          <Store size={17} />
+          <span>Restaurant Management</span>
         </div>
-
-        <nav className="restaurant-sidebar-nav">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === "/restaurant/dashboard"}
-                onClick={closeSidebar}
-                className={({ isActive }) =>
-                  `restaurant-sidebar-link ${
-                    isActive ? "active" : ""
-                  }`
-                }
-              >
-                <Icon size={20} />
-
-                <span>{item.label}</span>
-
-                <ChevronRight
-                  className="restaurant-nav-arrow"
-                  size={17}
-                />
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* HELP CARD */}
-
-        <div className="restaurant-sidebar-help">
-          <div className="restaurant-help-icon">?</div>
-
-          <div>
-            <strong>Need Help?</strong>
-            <p>Manage your restaurant with Smart FoodCourt.</p>
-          </div>
-        </div>
-
-        {/* LOGOUT */}
 
         <button
-          type="button"
           className="restaurant-sidebar-logout"
           onClick={handleLogout}
         >
@@ -200,12 +126,10 @@ function RestaurantSidebar() {
           <span>Logout</span>
         </button>
 
-        <div className="restaurant-sidebar-footer">
-          Smart FoodCourt
-          <span>Eat Smart • Live Better.</span>
-        </div>
-      </aside>
-    </>
+        <p>Smart FoodCourt © 2026</p>
+      </div>
+
+    </aside>
   );
 }
 
