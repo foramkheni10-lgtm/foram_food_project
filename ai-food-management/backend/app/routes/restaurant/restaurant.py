@@ -16,7 +16,10 @@ import hashlib
 import secrets
 
 from app.database import database
-from backports.zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from datetime import datetime, timezone, timedelta
 
