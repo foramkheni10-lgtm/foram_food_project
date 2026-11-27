@@ -410,3 +410,20 @@
     padding: 15px;
   }
 }
+.feedback-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--theme-border, #e7e0d8);
+  border-radius: 9px;
+  background: var(--theme-card, #fff);
+  color: var(--theme-text, #292524);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.feedback-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
