@@ -540,7 +540,26 @@ async def place_order(
         )
 
     except Exception as e:
-        print("Order notification error:", str(e))
+        print("Customer order notification error:", str(e))
+
+    # CREATE RESTAURANT NEW ORDER NOTIFICATION
+
+    try:
+        if order_restaurant_id:
+            await create_notification(
+                recipient_id=order_restaurant_id,
+                recipient_role="restaurant",
+                title="New Order Received!",
+                message=(
+                    f"You have received a new order {order_number}. "
+                    f"Total amount: ₹{total_price:.2f}."
+                ),
+                notification_type="new_order",
+                related_id=order_id
+            )
+
+    except Exception as e:
+        print("Restaurant new order notification error:", str(e))
 
     # RESPONSE
 

@@ -1,6 +1,5 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import RestaurantSidebar from "./RestaurantSidebar";
@@ -56,7 +55,7 @@ const getRestaurantToken = () => {
 };
 
 function Feedback() {
-  const navigate = useNavigate();
+ 
 
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);

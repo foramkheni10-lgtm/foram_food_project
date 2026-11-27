@@ -6,13 +6,12 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import RestaurantHeader from "./RestaurantHeader";
 import RestaurantSidebar from "./RestaurantSidebar";
-import "../../styles/restaurant/RestaurantDashboard.css";
 
+import "../../styles/restaurant/RestaurantDashboard.css";
 import { useRestaurantTheme } from "../../theme/RestaurantThemeContext";
 
 import {
@@ -22,7 +21,10 @@ import {
   type ThemeName,
 } from "../../theme/RestaurantTheme";
 
-const API = "http://127.0.0.1:8000";
+// Local API during development; Render API in production.
+const API = import.meta.env.DEV
+  ? "http://127.0.0.1:8000"
+  : "https://foram-food-project.onrender.com";
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
@@ -128,7 +130,6 @@ function RestaurantDashboard() {
 
       const authConfig = getAuthConfig();
 
-      // Load dashboard data
       const dashboardResponse = await axios.get(
         `${API}/api/restaurants/${restaurantId}/dashboard`,
         authConfig
@@ -148,7 +149,7 @@ function RestaurantDashboard() {
       const orders: RestaurantOrder[] = data.recentOrders || [];
       setRecentOrders(orders);
 
-      // Calculate popular food from recent orders
+      // Calculate popular food from recent orders.
       const foodMap: Record<string, PopularFood> = {};
 
       orders.forEach((order) => {
@@ -174,7 +175,7 @@ function RestaurantDashboard() {
 
       setPopularFood(popular);
 
-      // Load restaurant profile
+      // Load restaurant profile.
       const profileResponse = await axios.get(
         `${API}/api/restaurants/${restaurantId}`,
         authConfig
@@ -201,7 +202,7 @@ function RestaurantDashboard() {
           : ""
       );
 
-      // Load restaurant theme
+      // Load saved restaurant theme.
       const savedTheme = getTheme(profile.theme);
 
       setRestaurantTheme(savedTheme);
@@ -475,7 +476,7 @@ function RestaurantDashboard() {
     "--border": `${theme.primaryColor}30`,
   } as CSSProperties;
 
-  // LOADING AND ERROR
+  // LOADING STATE
 
   if (loading) {
     return (
@@ -483,13 +484,19 @@ function RestaurantDashboard() {
         <RestaurantSidebar />
 
         <div className="restaurant-content-area">
+          <RestaurantHeader />
+
           <div className="dashboard-loading">
+            <div className="dashboard-loader" />
             <h2>Loading Dashboard...</h2>
+            <p>Please wait while we load your restaurant information.</p>
           </div>
         </div>
       </>
     );
   }
+
+  // ERROR STATE
 
   if (error) {
     return (
@@ -497,23 +504,27 @@ function RestaurantDashboard() {
         <RestaurantSidebar />
 
         <div className="restaurant-content-area">
+          <RestaurantHeader />
+
           <div className="dashboard-loading">
             <h2>Dashboard Error</h2>
             <p>{error}</p>
 
-            <button
-              onClick={() => getDashboardData()}
-              className="login-again-button"
-            >
-              Try Again
-            </button>
+            <div className="dashboard-error-actions">
+              <button
+                onClick={() => getDashboardData()}
+                className="login-again-button"
+              >
+                Try Again
+              </button>
 
-            <button
-              onClick={handleLogout}
-              className="login-again-button"
-            >
-              Go to Login
-            </button>
+              <button
+                onClick={handleLogout}
+                className="login-again-button secondary-login-button"
+              >
+                Go to Login
+              </button>
+            </div>
           </div>
         </div>
       </>
@@ -527,13 +538,14 @@ function RestaurantDashboard() {
       <RestaurantSidebar />
 
       <div className="restaurant-content-area">
+        <RestaurantHeader />
+
         <div className="dashboard" style={dashboardStyle}>
           <main className="main-content">
-
-            {/* HEADER */}
+            {/* DASHBOARD TITLE AND PROFILE */}
 
             <header className="dashboard-header">
-              <div>
+              <div className="dashboard-heading">
                 <h1>Dashboard</h1>
                 <p>Welcome back, {restaurantName} 👋</p>
               </div>
@@ -555,42 +567,53 @@ function RestaurantDashboard() {
                     <span className="profile-logo-placeholder">🍽️</span>
                   )}
 
-                  <span>{restaurantName}</span>
+                  <span className="profile-restaurant-name">
+                    {restaurantName}
+                  </span>
                   <span className="profile-chevron">⌄</span>
                 </button>
 
                 {profileMenuOpen && (
-                  <div className="profile-dropdown">
-                    <div className="profile-dropdown-heading">
-                      <strong>{restaurantName}</strong>
-                      <span>{email}</span>
-                    </div>
-
-                    <button onClick={openEditProfile}>
-                      <span>✏️</span> Edit Profile
-                    </button>
-
-                    <button onClick={openEditProfile}>
-                      <span>🎨</span> Change Dashboard Theme
-                    </button>
-
-                    <button onClick={handleLogout}>
-                      <span>🚪</span> Logout
-                    </button>
-
-                    <div className="profile-dropdown-divider" />
-
+                  <>
                     <button
-                      className="delete-profile-option"
-                      onClick={handleDeleteAccount}
-                      disabled={deleting}
-                    >
-                      <span>🗑️</span>
-                      {deleting
-                        ? "Deleting..."
-                        : "Delete Restaurant Account"}
-                    </button>
-                  </div>
+                      type="button"
+                      className="profile-dropdown-backdrop"
+                      aria-label="Close profile menu"
+                      onClick={() => setProfileMenuOpen(false)}
+                    />
+
+                    <div className="profile-dropdown">
+                      <div className="profile-dropdown-heading">
+                        <strong>{restaurantName}</strong>
+                        <span>{email}</span>
+                      </div>
+
+                      <button onClick={openEditProfile}>
+                        <span>✏️</span> Edit Profile
+                      </button>
+
+                      <button onClick={openEditProfile}>
+                        <span>🎨</span> Change Dashboard Theme
+                      </button>
+
+                      <button onClick={handleLogout}>
+                        <span>🚪</span> Logout
+                      </button>
+
+                      <div className="profile-dropdown-divider" />
+
+                      <button
+                        className="delete-profile-option"
+                        onClick={handleDeleteAccount}
+                        disabled={deleting}
+                      >
+                        <span>🗑️</span>
+                        {deleting
+                          ? "Deleting..."
+                          : "Delete Restaurant Account"}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </header>
@@ -667,7 +690,6 @@ function RestaurantDashboard() {
             {/* DASHBOARD CONTENT */}
 
             <section className="dashboard-grid">
-
               {/* RECENT ORDERS */}
 
               <div className="dashboard-card">
@@ -842,6 +864,7 @@ function RestaurantDashboard() {
                     type="button"
                     className="profile-modal-close"
                     onClick={() => setEditModalOpen(false)}
+                    aria-label="Close edit profile"
                   >
                     ×
                   </button>
@@ -851,7 +874,6 @@ function RestaurantDashboard() {
                   <div className="profile-form-grid">
                     <div className="profile-form-group">
                       <label>Restaurant Name</label>
-
                       <input
                         value={editRestaurantName}
                         onChange={(e) =>
@@ -863,7 +885,6 @@ function RestaurantDashboard() {
 
                     <div className="profile-form-group">
                       <label>Owner Name</label>
-
                       <input
                         value={editOwnerName}
                         onChange={(e) =>
@@ -875,7 +896,6 @@ function RestaurantDashboard() {
 
                     <div className="profile-form-group">
                       <label>Email Address</label>
-
                       <input
                         type="email"
                         value={editEmail}
@@ -888,7 +908,6 @@ function RestaurantDashboard() {
 
                     <div className="profile-form-group">
                       <label>Phone Number</label>
-
                       <input
                         value={editPhone}
                         onChange={(e) =>
@@ -900,7 +919,6 @@ function RestaurantDashboard() {
 
                     <div className="profile-form-group profile-form-full">
                       <label>Restaurant Address</label>
-
                       <textarea
                         value={editAddress}
                         onChange={(e) =>
@@ -923,13 +941,12 @@ function RestaurantDashboard() {
                           </span>
                         )}
 
-                        <div>
+                        <div className="edit-logo-input">
                           <input
                             type="file"
                             accept="image/*"
                             onChange={handleEditLogo}
                           />
-
                           <small>
                             Image file, maximum size 2MB.
                           </small>

@@ -213,31 +213,50 @@ function Register() {
 
   // Restaurant CAPTCHA
   const refreshCaptcha = useCallback(async () => {
-    try {
-      setCaptchaLoading(true);
-      setCaptchaAnswer("");
-      setCaptchaId("");
-      setCaptchaImage("");
-      setRestaurantErrors((previous) => ({
-        ...previous,
-        captcha: "",
-      }));
+  try {
+    setCaptchaLoading(true);
+    setCaptchaAnswer("");
+    setCaptchaId("");
+    setCaptchaImage("");
 
-      const response = await axios.get(
-        `${API_URL}/api/restaurants/captcha`
-      );
+    setRestaurantServerError("");
 
-      setCaptchaId(response.data.captcha_id);
-      setCaptchaImage(response.data.captcha_image);
-    } catch (error) {
-      console.error("Restaurant signup CAPTCHA error:", error);
-      setRestaurantServerError(
-        "Unable to load CAPTCHA. Please refresh the page."
-      );
-    } finally {
-      setCaptchaLoading(false);
+    setRestaurantErrors((previous) => ({
+      ...previous,
+      captcha: "",
+    }));
+
+    const response = await axios.get(
+      `${API_URL}/api/restaurants/captcha`,
+      {
+        timeout: 20000,
+      }
+    );
+
+    if (
+      !response.data?.captcha_id ||
+      !response.data?.captcha_image
+    ) {
+      throw new Error("Invalid CAPTCHA response from server.");
     }
-  }, []);
+
+    setCaptchaId(response.data.captcha_id);
+    setCaptchaImage(response.data.captcha_image);
+
+  } catch (error) {
+    console.error("Restaurant signup CAPTCHA error:", error);
+
+    setCaptchaId("");
+    setCaptchaImage("");
+
+    setRestaurantServerError(
+      "Unable to load CAPTCHA. Please click Refresh and try again."
+    );
+
+  } finally {
+    setCaptchaLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     void refreshCaptcha();

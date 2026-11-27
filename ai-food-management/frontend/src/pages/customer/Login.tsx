@@ -45,26 +45,36 @@ function Login() {
   // --------------------------------------------------
 
   const refreshCaptcha = async () => {
-    setCaptchaLoading(true);
+  setCaptchaLoading(true);
+  setCaptchaId("");
+  setCaptchaImage("");
+  setCaptchaAnswer("");
 
-    try {
-      const response = await axios.get<CaptchaData>(
-        `${API_URL}/customer/captcha`
-      );
+  try {
+    const response = await axios.get<CaptchaData>(
+      `${API_URL}/customer/captcha`,
+      { timeout: 20000 }
+    );
 
-      setCaptchaId(response.data.captcha_id);
-      setCaptchaImage(response.data.captcha_image);
-      setCaptchaAnswer("");
-    } catch (err) {
-      console.error("CAPTCHA loading failed:", err);
-
-      setCaptchaId("");
-      setCaptchaImage("");
-      setError("Unable to load CAPTCHA. Please refresh.");
-    } finally {
-      setCaptchaLoading(false);
+    if (!response.data?.captcha_id || !response.data?.captcha_image) {
+      throw new Error("Invalid CAPTCHA response from server.");
     }
-  };
+
+    setCaptchaId(response.data.captcha_id);
+    setCaptchaImage(response.data.captcha_image);
+    setError("");
+  } catch (err) {
+    console.error("CAPTCHA loading failed:", err);
+
+    setCaptchaId("");
+    setCaptchaImage("");
+    setError(
+      "CAPTCHA could not load. Please click the refresh button and try again."
+    );
+  } finally {
+    setCaptchaLoading(false);
+  }
+};
 
   useEffect(() => {
     refreshCaptcha();

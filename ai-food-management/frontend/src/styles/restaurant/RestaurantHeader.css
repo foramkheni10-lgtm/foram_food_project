@@ -1,0 +1,253 @@
+
+.restaurant-header {
+  height: 82px;
+  width: 100%;
+  padding: 0 30px;
+  background: #ffffff;
+  border-bottom: 1px solid #e7e0d8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.restaurant-header-left h1 {
+  margin: 0;
+  color: #292524;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.restaurant-header-left p {
+  margin: 5px 0 0;
+  color: #78716c;
+  font-size: 13px;
+}
+
+.restaurant-header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.restaurant-notification-wrapper {
+  position: relative;
+}
+
+.restaurant-notification-button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e7e0d8;
+  border-radius: 12px;
+  background: #faf7f2;
+  color: #292524;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
+
+.restaurant-notification-button:hover {
+  background: #f8e8df;
+  color: #c65d3a;
+}
+
+.restaurant-notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 4px;
+  border-radius: 20px;
+  background: #c65d3a;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.restaurant-notification-dropdown {
+  position: absolute;
+  top: 56px;
+  right: 0;
+  width: 370px;
+  max-width: calc(100vw - 30px);
+  background: #ffffff;
+  border: 1px solid #e7e0d8;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px rgba(41, 37, 36, 0.15);
+  overflow: hidden;
+  z-index: 999;
+}
+
+.restaurant-notification-heading {
+  padding: 17px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e7e0d8;
+}
+
+.restaurant-notification-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #292524;
+}
+
+.restaurant-notification-heading span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #78716c;
+}
+
+.restaurant-notification-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.restaurant-notification-actions button,
+.restaurant-notification-item-actions button {
+  border: none;
+  background: transparent;
+  color: #78716c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 7px;
+}
+
+.restaurant-notification-actions button:hover,
+.restaurant-notification-item-actions button:hover {
+  background: #f8e8df;
+  color: #c65d3a;
+}
+
+.restaurant-mark-all {
+  width: 100%;
+  padding: 11px 18px;
+  border: none;
+  background: #faf7f2;
+  color: #c65d3a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.restaurant-notification-list {
+  max-height: 390px;
+  overflow-y: auto;
+}
+
+.restaurant-notification-item {
+  padding: 14px 15px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0ebe6;
+}
+
+.restaurant-notification-item.unread {
+  background: #fff9f5;
+}
+
+.restaurant-notification-content {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.restaurant-notification-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.restaurant-notification-title strong {
+  font-size: 13px;
+  color: #292524;
+}
+
+.restaurant-unread-dot {
+  width: 7px;
+  height: 7px;
+  background: #c65d3a;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.restaurant-notification-content p {
+  margin: 6px 0;
+  color: #78716c;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.restaurant-notification-date {
+  color: #a8a29e;
+  font-size: 10px;
+}
+
+.restaurant-notification-item-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.restaurant-notification-empty {
+  min-height: 145px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #a8a29e;
+  font-size: 13px;
+}
+
+.restaurant-notification-empty p {
+  margin: 0;
+}
+
+.restaurant-notification-footer {
+  padding: 12px;
+  text-align: center;
+  font-size: 11px;
+  color: #a8a29e;
+  border-top: 1px solid #e7e0d8;
+}
+
+@media (max-width: 600px) {
+  .restaurant-header {
+    height: 70px;
+    padding: 0 14px;
+  }
+
+  .restaurant-header-left h1 {
+    font-size: 17px;
+  }
+
+  .restaurant-header-left p {
+    font-size: 11px;
+  }
+
+  .restaurant-notification-dropdown {
+    right: -5px;
+    width: 340px;
+  }
+}
