@@ -4,7 +4,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import "./Home.css";
 import AIFoodAssistant from "./AIFoodAssistant";
-
+import NotificationBell from "./NotificationBell";
 
 interface Customer {
   name?: string;
@@ -175,10 +175,11 @@ function CustomerLayout() {
             )}
           </nav>
 
-          {/* AI ASSISTANT */}
-          <div className="sf-header-actions">
-            <AIFoodAssistant />
-          </div>
+          {/* NOTIFICATIONS + AI ASSISTANT */}
+<div className="sf-header-actions">
+  {customer && <NotificationBell />}
+  <AIFoodAssistant />
+</div>
 
           {/* AUTH BUTTONS */}
           <div className="sf-auth-actions">

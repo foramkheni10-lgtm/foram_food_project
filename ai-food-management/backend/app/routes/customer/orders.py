@@ -7,6 +7,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.routes.notifications import create_notification
 from app.database import database
 from app.security import get_current_customer
 from app.routes.customer.cart import (
@@ -93,14 +94,12 @@ def serialize_order(order: dict) -> dict:
 # =====================================================
 # GET AVAILABLE TABLES
 # =====================================================
-    
-
 
 @router.get("/available-tables")
 async def get_available_tables(
     customer: dict = Depends(get_current_customer)
 ):
-    # Release expired temporary reservations
+
     await database.tables.update_many(
         {
             "manual_status": "Reserved",
@@ -280,7 +279,6 @@ async def place_order(
 
     # VALIDATE CART ITEMS AND RECALCULATE PRICES
 
-    
     order_items = []
     total_price = 0.0
 
@@ -314,11 +312,8 @@ async def place_order(
                 detail="Invalid item quantity in cart."
             )
 
-        # Get the current food price directly from MongoDB.
         base_price = get_food_price(food)
 
-        # Validate customization options again.
-        # Never trust prices stored in the cart.
         raw_customizations = cart_item.get("customizations", [])
 
         if not isinstance(raw_customizations, list):
@@ -332,14 +327,15 @@ async def place_order(
             raw_customizations
         )
 
-        # Calculate customization price using backend prices.
         customization_total = calculate_customization_price(
             customizations
         )
 
         unit_price = base_price + customization_total
         subtotal = unit_price * quantity
-                # Get restaurant information from the food document
+
+        # GET RESTAURANT INFORMATION
+
         restaurant_id = (
             food.get("restaurant_id")
             or food.get("restaurantId")
@@ -372,7 +368,6 @@ async def place_order(
             or ""
         )
 
-        # Fetch the restaurant's actual name
         restaurant_query = (
             {"_id": ObjectId(restaurant_id)}
             if ObjectId.is_valid(restaurant_id)
@@ -391,10 +386,12 @@ async def place_order(
                 or restaurant_name
             )
 
-        # Ensure every food item belongs to the same restaurant
+        # ENSURE ONE RESTAURANT PER ORDER
+
         if order_restaurant_id is None:
             order_restaurant_id = restaurant_id
             order_restaurant_name = restaurant_name
+
         elif order_restaurant_id != restaurant_id:
             raise HTTPException(
                 status_code=400,
@@ -426,12 +423,13 @@ async def place_order(
         })
 
         total_price += subtotal
+
     # CREATE ORDER DATA
 
     order_number = f"SFC-{uuid4().hex[:10].upper()}"
 
     order = {
-                "restaurant_id": order_restaurant_id,
+        "restaurant_id": order_restaurant_id,
         "restaurant_name": order_restaurant_name,
         "order_number": order_number,
         "customer_id": customer_id,
@@ -497,15 +495,11 @@ async def place_order(
     # SAVE ORDER
 
     try:
-
         result = await database.orders.insert_one(order)
 
     except Exception:
 
-        # RELEASE TABLE IF ORDER INSERTION FAILS
-
         if table_doc:
-
             await database.tables.update_one(
                 {
                     "_id": table_doc["_id"],
@@ -524,6 +518,8 @@ async def place_order(
 
         raise
 
+    order_id = str(result.inserted_id)
+
     # CLEAR CART
 
     await database.carts.update_one(
@@ -531,10 +527,27 @@ async def place_order(
         {"$set": {"items": []}}
     )
 
+    # CREATE CUSTOMER ORDER NOTIFICATION
+
+    try:
+        await create_notification(
+            recipient_id=customer_id,
+            recipient_role="customer",
+            title="Order Placed Successfully!",
+            message=f"Your order {order_number} has been placed successfully.",
+            notification_type="order",
+            related_id=order_id
+        )
+
+    except Exception as e:
+        print("Order notification error:", str(e))
+
+    # RESPONSE
+
     return {
         "success": True,
         "message": "Your order has been placed successfully!",
-        "order_id": str(result.inserted_id),
+        "order_id": order_id,
         "order_number": order_number,
         "total_price": total_price,
         "order_status": "Placed",
@@ -629,6 +642,24 @@ async def complete_demo_delivery(
             }
         }
     )
+
+    # CREATE DELIVERY COMPLETED NOTIFICATION
+
+    try:
+        await create_notification(
+            recipient_id=customer_id,
+            recipient_role="customer",
+            title="Order Delivered!",
+            message=(
+                f"Your order {order.get('order_number', '')} "
+                "has been delivered successfully."
+            ),
+            notification_type="delivery",
+            related_id=order_id
+        )
+
+    except Exception as e:
+        print("Delivery notification error:", str(e))
 
     return {
         "success": True,

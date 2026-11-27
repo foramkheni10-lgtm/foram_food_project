@@ -5,7 +5,7 @@ from bson import ObjectId
 from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
-
+from app.routes.notifications import create_notification
 
 router = APIRouter(
     prefix="/api/deliveries",
@@ -28,8 +28,7 @@ class LocationUpdate(BaseModel):
 # =========================================================
 
 @router.post("/assign/{order_id}")
-def assign_delivery(order_id: str, delivery: dict):
-
+async def assign_delivery(order_id: str, delivery: dict):
     try:
         order = orders_collection.find_one(
             {"_id": ObjectId(order_id)}
@@ -38,7 +37,7 @@ def assign_delivery(order_id: str, delivery: dict):
         if not order:
             raise HTTPException(404, "Order not found")
 
-        if order.get("orderType") != "delivery":
+        if order.get("orderType", order.get("delivery_type")) != "delivery":
             raise HTTPException(
                 400, "This is not a delivery order"
             )
@@ -55,6 +54,22 @@ def assign_delivery(order_id: str, delivery: dict):
         result = deliveries_collection.insert_one(
             delivery_data
         )
+                # Notify customer about delivery assignment
+        if order.get("customer_id"):
+            try:
+                await create_notification(
+                    recipient_id=str(order["customer_id"]),
+                    recipient_role="customer",
+                    title="Delivery Person Assigned!",
+                    message=(
+                        f"A delivery person has been assigned to your order "
+                        f"{order.get('order_number', order_id)}."
+                    ),
+                    notification_type="delivery",
+                    related_id=order_id
+                )
+            except Exception as e:
+                print("Delivery assignment notification error:", str(e))
 
         return {
             "message": "Delivery person assigned successfully",
@@ -75,7 +90,7 @@ def assign_delivery(order_id: str, delivery: dict):
 # =========================================================
 
 @router.patch("/{delivery_id}/status")
-def update_delivery_status(delivery_id: str, status: str):
+async def update_delivery_status(delivery_id: str, status: str):
 
     valid_statuses = [
         "assigned",
@@ -114,11 +129,44 @@ def update_delivery_status(delivery_id: str, status: str):
         if status == "delivered":
             update_data["locationSharing"] = False
 
-        deliveries_collection.update_one(
-            {"_id": delivery_object_id},
-            {"$set": update_data}
-        )
+                # Notify customer about delivery status
+        order = orders_collection.find_one({
+            "_id": ObjectId(delivery.get("orderId"))
+        })
 
+        notification_messages = {
+            "assigned": (
+                "Delivery Assigned",
+                "A delivery person has been assigned to your order."
+            ),
+            "picked_up": (
+                "Order Picked Up!",
+                "Your order has been picked up by the delivery person."
+            ),
+            "out_for_delivery": (
+                "Out for Delivery!",
+                "Your order is on its way."
+            ),
+            "delivered": (
+                "Order Delivered Successfully!",
+                "Your order has been delivered. Enjoy your meal!"
+            )
+        }
+
+        notification = notification_messages.get(status)
+
+        if notification and order and order.get("customer_id"):
+            try:
+                await create_notification(
+                    recipient_id=str(order["customer_id"]),
+                    recipient_role="customer",
+                    title=notification[0],
+                    message=notification[1],
+                    notification_type="delivery",
+                    related_id=str(delivery.get("orderId"))
+                )
+            except Exception as e:
+                print("Delivery status notification error:", str(e))
         return {
             "message": "Delivery status updated successfully",
             "deliveryId": delivery_id,

@@ -55,7 +55,8 @@ from app.routes import kitchen_routes
 from app.routes import purchase_order_routes
 from app.routes import supplier_routes
 from app.routes import ai_routes
-from app.routes.admin import feedback as admin_feedback
+# from app.routes.admin import feedback as admin_feedback
+from app.routes import notifications
 
 
 # Application startup and shutdown
@@ -103,6 +104,7 @@ app.add_middleware(
 
 # Register common routers
 app.include_router(registration_router)
+app.include_router(notifications.router)
 app.include_router(login_router)
 app.include_router(admin_feedback.router)
 

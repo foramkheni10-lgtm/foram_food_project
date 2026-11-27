@@ -53,20 +53,41 @@
   margin: 8px 0 0;
 }
 
+.delivery-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.delivery-assign-button,
 .delivery-refresh-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  padding: 11px 18px;
-  border: 1px solid #e7e0d8;
+  padding: 11px 17px;
   border-radius: 10px;
-  background: #fff;
-  color: #44403c;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s ease;
+}
+
+.delivery-assign-button {
+  color: #fff;
+  background: #c65d3a;
+  border: 1px solid #c65d3a;
+}
+
+.delivery-assign-button:hover {
+  background: #a94729;
+  border-color: #a94729;
+}
+
+.delivery-refresh-button {
+  color: #44403c;
+  background: #fff;
+  border: 1px solid #e7e0d8;
 }
 
 .delivery-refresh-button:hover {
@@ -75,7 +96,8 @@
   color: #a94729;
 }
 
-.delivery-refresh-button:disabled {
+.delivery-refresh-button:disabled,
+.delivery-assign-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -435,8 +457,7 @@
   margin-bottom: 13px;
 }
 
-.delivery-person span,
-.delivery-footer span {
+.delivery-person span {
   display: block;
   color: #a8a29e;
   font-size: 11px;
@@ -449,6 +470,17 @@
   color: #44403c;
   font-size: 13px;
   font-weight: 700;
+}
+
+.delivery-person a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  color: #a94729;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
 }
 
 /* ADDRESS */
@@ -482,6 +514,14 @@
   gap: 12px;
   padding-top: 15px;
   border-top: 1px solid #f0ebe5;
+}
+
+.delivery-footer span {
+  display: block;
+  color: #a8a29e;
+  font-size: 11px;
+  font-weight: 650;
+  margin-bottom: 5px;
 }
 
 .delivery-footer strong {
@@ -737,6 +777,119 @@
   padding: 15px 0;
 }
 
+/* ASSIGN FORM */
+
+.delivery-assign-form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 23px;
+}
+
+.delivery-assign-form label {
+  color: #44403c;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delivery-assign-form input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #e7e0d8;
+  border-radius: 9px;
+  background: #faf7f2;
+  color: #292524;
+  outline: none;
+  font-size: 13px;
+}
+
+.delivery-assign-form input:focus {
+  border-color: #c65d3a;
+  box-shadow: 0 0 0 3px rgba(198, 93, 58, 0.1);
+}
+
+.delivery-assign-form button {
+  margin-top: 12px;
+}
+
+/* GPS LOCATION */
+
+.delivery-gps-section {
+  margin-top: 20px;
+  padding: 17px;
+  border: 1px solid #eee7df;
+  border-radius: 12px;
+  background: #faf7f2;
+}
+
+.delivery-gps-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.delivery-gps-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #c65d3a;
+}
+
+.delivery-gps-heading strong {
+  color: #292524;
+  font-size: 14px;
+}
+
+.delivery-gps-heading button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid #e7e0d8;
+  border-radius: 7px;
+  background: #fff;
+  color: #a94729;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delivery-gps-heading button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delivery-gps-section p {
+  margin: 8px 0;
+  color: #78716c;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.delivery-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 9px 13px;
+  border-radius: 8px;
+  background: #c65d3a;
+  color: #fff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.delivery-map-link:hover {
+  background: #a94729;
+}
+
+/* MODAL STATUS ACTION */
+
 .delivery-modal-action {
   margin-top: 16px;
   padding: 17px;
@@ -810,7 +963,12 @@
     gap: 15px;
   }
 
-  .delivery-refresh-button {
+  .delivery-header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .delivery-header-actions button {
     width: 100%;
   }
 
@@ -871,6 +1029,10 @@
     padding: 17px;
   }
 
+  .delivery-assign-form {
+    padding: 17px;
+  }
+
   .delivery-detail {
     gap: 10px;
   }
@@ -882,6 +1044,11 @@
   }
 
   .delivery-card-top {
+    flex-direction: column;
+  }
+
+  .delivery-gps-heading {
+    align-items: flex-start;
     flex-direction: column;
   }
 }

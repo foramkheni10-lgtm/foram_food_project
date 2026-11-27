@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
 from app.db_config import restaurants_collection, db
-
+from app.routes.notifications import create_notification
 from passlib.context import CryptContext
 from jose import jwt
 from bson import ObjectId
@@ -1071,6 +1071,12 @@ async def get_restaurant_order_list(restaurant_id: str):
 # ==========================================================
 
 @router.put("/{restaurant_id}/orders/{order_id}/status")
+
+# ==========================================================
+# UPDATE RESTAURANT ORDER STATUS
+# ==========================================================
+
+@router.put("/{restaurant_id}/orders/{order_id}/status")
 async def update_restaurant_order_status(
     restaurant_id: str,
     order_id: str,
@@ -1112,6 +1118,8 @@ async def update_restaurant_order_status(
             detail="Order not found"
         )
 
+    # VERIFY RESTAURANT OWNS THIS ORDER
+
     restaurant_owns_order = False
 
     for item in order.get("items", []):
@@ -1134,6 +1142,8 @@ async def update_restaurant_order_status(
             status_code=403,
             detail="This order does not belong to your restaurant"
         )
+
+    # VALIDATE STATUS TRANSITION
 
     restaurant_statuses = order.get(
         "restaurant_statuses", {}
@@ -1169,6 +1179,8 @@ async def update_restaurant_order_status(
             )
         )
 
+    # GET ALL RESTAURANTS IN THIS ORDER
+
     order_restaurant_ids = set()
 
     for item in order.get("items", []):
@@ -1186,6 +1198,8 @@ async def update_restaurant_order_status(
             order_restaurant_ids.add(
                 str(food.get("restaurant_id", ""))
             )
+
+    # SAVE RESTAURANT STATUS
 
     update_fields = {
         f"restaurant_statuses.{restaurant_id}": new_status
@@ -1219,6 +1233,53 @@ async def update_restaurant_order_status(
             detail="Order status could not be saved"
         )
 
+    # SEND CUSTOMER ORDER STATUS NOTIFICATION
+
+    notification_messages = {
+        "Accepted": (
+            "Order Accepted",
+            "The restaurant has accepted your order."
+        ),
+        "Preparing": (
+            "Food Preparation Started",
+            "The restaurant has started preparing your food."
+        ),
+        "Ready": (
+            "Your Food Is Ready!",
+            "Your order is ready."
+        ),
+        "Completed": (
+            "Order Completed",
+            "The restaurant has completed your order."
+        ),
+        "Rejected": (
+            "Order Rejected",
+            "Unfortunately, the restaurant has rejected your order."
+        )
+    }
+
+    notification = notification_messages.get(new_status)
+
+    if notification and order.get("customer_id"):
+        try:
+            await create_notification(
+                recipient_id=str(order["customer_id"]),
+                recipient_role="customer",
+                title=notification[0],
+                message=(
+                    f"{notification[1]} "
+                    f"Order: {order.get('order_number', '')}"
+                ),
+                notification_type="order",
+                related_id=order_id
+            )
+
+        except Exception as e:
+            print(
+                "Restaurant order notification error:",
+                str(e)
+            )
+
     return {
         "success": True,
         "message": "Order status saved successfully",
@@ -1228,6 +1289,7 @@ async def update_restaurant_order_status(
         "new_status": saved_status,
         "overall_status": updated_order.get("order_status")
     }
+
 
 
 # ==========================================================
