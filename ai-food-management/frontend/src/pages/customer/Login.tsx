@@ -15,7 +15,7 @@ const API_URL = "https://foram-food-project.onrender.com";
 
 interface CaptchaData {
   captcha_id: string;
-  captcha_image: string;
+  captcha_question: string;
   expires_in: number;
 }
 
@@ -36,8 +36,8 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const [captchaId, setCaptchaId] = useState("");
+  const [captchaQuestion, setCaptchaQuestion] = useState("");
   const [captchaAnswer, setCaptchaAnswer] = useState("");
-  const [captchaImage, setCaptchaImage] = useState("");
 
   const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -55,7 +55,7 @@ function Login() {
     | undefined;
 
   // --------------------------------------------------
-  // REFRESH CAPTCHA
+  // REFRESH MATH CAPTCHA
   // --------------------------------------------------
 
   const refreshCaptcha = async (
@@ -65,12 +65,14 @@ function Login() {
 
     setCaptchaLoading(true);
     setCaptchaId("");
-    setCaptchaImage("");
+    setCaptchaQuestion("");
     setCaptchaAnswer("");
+
+    setError("");
 
     const captchaEndpoint =
       type === "restaurant"
-        ? `${API_URL}/api/restaurants/captcha`
+        ? `${API_URL}/api/restaurants/login-captcha`
         : `${API_URL}/customer/captcha`;
 
     try {
@@ -85,7 +87,6 @@ function Login() {
         }
       );
 
-      // Ignore outdated responses.
       if (requestId !== captchaRequestRef.current) {
         return;
       }
@@ -95,27 +96,26 @@ function Login() {
       if (
         !data ||
         typeof data.captcha_id !== "string" ||
-        typeof data.captcha_image !== "string" ||
+        typeof data.captcha_question !== "string" ||
         !data.captcha_id ||
-        !data.captcha_image.startsWith("data:image/")
+        !data.captcha_question
       ) {
         throw new Error("Invalid CAPTCHA response.");
       }
 
       setCaptchaId(data.captcha_id);
-      setCaptchaImage(data.captcha_image);
+      setCaptchaQuestion(data.captcha_question);
       setCaptchaAnswer("");
-      setError("");
 
     } catch (err) {
       if (requestId !== captchaRequestRef.current) {
         return;
       }
 
-      console.error("CAPTCHA loading failed:", err);
+      console.error("Math CAPTCHA loading failed:", err);
 
       setCaptchaId("");
-      setCaptchaImage("");
+      setCaptchaQuestion("");
 
       if (axios.isAxiosError(err) && !err.response) {
         setError(
@@ -162,7 +162,7 @@ function Login() {
     setPassword("");
     setCaptchaAnswer("");
     setCaptchaId("");
-    setCaptchaImage("");
+    setCaptchaQuestion("");
     setShowPassword(false);
 
     void refreshCaptcha(value);
@@ -184,8 +184,10 @@ function Login() {
       : "",
 
     captcha: !captchaAnswer.trim()
-      ? "Please enter the CAPTCHA characters."
-      : "",
+      ? "Please solve the maths CAPTCHA."
+      : !/^\d+$/.test(captchaAnswer.trim())
+        ? "Enter numbers only."
+        : "",
   };
 
   const showError = (
@@ -208,7 +210,7 @@ function Login() {
       return;
     }
 
-    if (!captchaId || !captchaImage || captchaLoading) {
+    if (!captchaId || !captchaQuestion || captchaLoading) {
       setError("Please wait for CAPTCHA to load.");
       return;
     }
@@ -220,7 +222,7 @@ function Login() {
         email: email.trim().toLowerCase(),
         password,
         captcha_id: captchaId,
-        captcha_answer: captchaAnswer.trim().toUpperCase(),
+        captcha_answer: captchaAnswer.trim(),
         remember_me: rememberMe,
       };
 
@@ -330,7 +332,7 @@ function Login() {
 
       setSubmitted(false);
 
-      // Get a fresh CAPTCHA after failed login.
+      // Generate a new CAPTCHA after failed login.
       await refreshCaptcha(accountType);
 
     } finally {
@@ -527,34 +529,26 @@ function Login() {
                 )}
               </div>
 
-              {/* IMAGE CAPTCHA */}
+              {/* MATH CAPTCHA */}
 
               <div className="form-group captcha-group">
                 <label htmlFor="captchaAnswer">
-                  CAPTCHA *
+                  Security Verification *
                 </label>
 
-                <div className="captcha-display">
-                  {captchaImage ? (
-                    <img
-                      src={captchaImage}
-                      alt="CAPTCHA verification"
-                      className="captcha-image"
-                    />
-                  ) : (
-                    <div className="captcha-placeholder">
-                      {captchaLoading
-                        ? "Loading CAPTCHA..."
-                        : "CAPTCHA unavailable"}
-                    </div>
-                  )}
+                <div className="captcha-display math-captcha-display">
+                  <div className="math-captcha-question">
+                    {captchaLoading
+                      ? "Loading question..."
+                      : captchaQuestion || "CAPTCHA unavailable"}
+                  </div>
 
                   <button
                     type="button"
                     className="captcha-refresh"
                     onClick={() => void refreshCaptcha()}
                     disabled={captchaLoading || loading}
-                    title="Refresh CAPTCHA"
+                    title="Generate a new maths question"
                     aria-label="Refresh CAPTCHA"
                   >
                     <RefreshCw
@@ -569,10 +563,11 @@ function Login() {
                 <input
                   id="captchaAnswer"
                   type="text"
+                  inputMode="numeric"
                   value={captchaAnswer}
                   onChange={(e) =>
                     setCaptchaAnswer(
-                      e.target.value.toUpperCase()
+                      e.target.value.replace(/\D/g, "")
                     )
                   }
                   onBlur={() =>
@@ -581,10 +576,10 @@ function Login() {
                       captcha: true,
                     }))
                   }
-                  placeholder="Enter CAPTCHA characters"
-                  maxLength={6}
+                  placeholder="Enter your answer"
+                  maxLength={3}
                   autoComplete="off"
-                  disabled={loading}
+                  disabled={loading || captchaLoading}
                   className={
                     showError("captcha") ? "input-error" : ""
                   }
@@ -622,7 +617,7 @@ function Login() {
                   loading ||
                   captchaLoading ||
                   !captchaId ||
-                  !captchaImage
+                  !captchaQuestion
                 }
                 className="auth-submit-btn"
               >

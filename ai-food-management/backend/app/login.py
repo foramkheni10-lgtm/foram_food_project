@@ -15,8 +15,6 @@ from app.auth_helpers import (
 import bcrypt
 import secrets
 import hashlib
-import base64
-import random
 
 
 router = APIRouter(
@@ -35,86 +33,43 @@ class UserLogin(BaseModel):
 
 
 # --------------------------------------------------
-# GENERATE CAPTCHA IMAGE
+# GENERATE MATH CAPTCHA
 # --------------------------------------------------
 
-def create_captcha_image(answer: str) -> str:
+def generate_math_captcha():
 
-    width = 230
-    height = 75
+    operations = ["+", "-", "*"]
+    operation = secrets.choice(operations)
 
-    svg_parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
-        '<rect width="100%" height="100%" fill="#e9dfe7"/>'
-    ]
+    if operation == "+":
+        first = secrets.randbelow(30) + 1
+        second = secrets.randbelow(30) + 1
+        answer = first + second
 
-    # Background noise dots
-    for _ in range(100):
-        x = random.randint(0, width)
-        y = random.randint(0, height)
-        radius = random.uniform(0.3, 1.5)
+    elif operation == "-":
+        first = secrets.randbelow(30) + 10
+        second = secrets.randbelow(first)
+        answer = first - second
 
-        svg_parts.append(
-            f'<circle cx="{x}" cy="{y}" r="{radius:.1f}" fill="#8e788e" opacity="0.35"/>'
-        )
+    else:
+        first = secrets.randbelow(9) + 2
+        second = secrets.randbelow(9) + 2
+        answer = first * second
 
-    # Distorted background lines
-    for _ in range(7):
-        x1 = random.randint(0, width)
-        y1 = random.randint(0, height)
-        x2 = random.randint(0, width)
-        y2 = random.randint(0, height)
+    question = f"{first} {operation} {second} = ?"
 
-        svg_parts.append(
-            f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
-            f'stroke="#88738c" stroke-width="1.3" opacity="0.55"/>'
-        )
+    return question, str(answer)
 
-    # CAPTCHA characters
-    colors = [
-        "#593c66",
-        "#9b394c",
-        "#31506f",
-        "#506b39",
-        "#73434b",
-        "#39334e"
-    ]
 
-    start_x = 23
+# --------------------------------------------------
+# CAPTCHA HASH
+# --------------------------------------------------
 
-    for index, character in enumerate(answer):
+def hash_captcha_answer(captcha_id: str, answer: str) -> str:
 
-        x = start_x + (index * 32)
-        y = random.randint(44, 55)
-        rotation = random.randint(-17, 17)
-        color = random.choice(colors)
-        font_size = random.randint(27, 34)
-
-        svg_parts.append(
-            f'<text x="{x}" y="{y}" '
-            f'font-family="Arial, sans-serif" '
-            f'font-size="{font_size}" '
-            f'font-weight="bold" '
-            f'fill="{color}" '
-            f'transform="rotate({rotation} {x} {y})">'
-            f'{character}</text>'
-        )
-
-    # Border
-    svg_parts.append(
-        '<rect x="1" y="1" width="228" height="73" '
-        'fill="none" stroke="#b7a8b6" stroke-width="1"/>'
-    )
-
-    svg_parts.append('</svg>')
-
-    svg = "".join(svg_parts)
-
-    encoded = base64.b64encode(
-        svg.encode("utf-8")
-    ).decode("utf-8")
-
-    return "data:image/svg+xml;base64," + encoded
+    return hashlib.sha256(
+        f"{captcha_id}:{answer}".encode("utf-8")
+    ).hexdigest()
 
 
 # --------------------------------------------------
@@ -124,20 +79,14 @@ def create_captcha_image(answer: str) -> str:
 @router.get("/captcha")
 async def generate_captcha():
 
-    characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-
-    answer = "".join(
-        secrets.choice(characters)
-        for _ in range(6)
-    )
+    question, answer = generate_math_captcha()
 
     captcha_id = secrets.token_urlsafe(24)
 
-    answer_hash = hashlib.sha256(
-        "{}:{}".format(captcha_id, answer).encode()
-    ).hexdigest()
-
-    captcha_image = create_captcha_image(answer)
+    answer_hash = hash_captcha_answer(
+        captcha_id,
+        answer
+    )
 
     await database.captcha_challenges.insert_one({
         "captcha_id": captcha_id,
@@ -148,7 +97,7 @@ async def generate_captcha():
 
     return {
         "captcha_id": captcha_id,
-        "captcha_image": captcha_image,
+        "captcha_question": question,
         "expires_in": 300
     }
 
@@ -176,14 +125,13 @@ async def login_user(user: UserLogin):
 
     # 2. VERIFY CAPTCHA
 
-    normalized_answer = user.captcha_answer.strip().upper()
+    normalized_answer = user.captcha_answer.strip()
 
-    answer_hash = hashlib.sha256(
-        "{}:{}".format(
-            user.captcha_id,
-            normalized_answer
-        ).encode()
-    ).hexdigest()
+    if not normalized_answer.isdigit():
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect CAPTCHA. Please try again."
+        )
 
     now = datetime.now(timezone.utc)
 
@@ -198,6 +146,11 @@ async def login_user(user: UserLogin):
             status_code=400,
             detail="CAPTCHA expired or invalid. Please refresh it."
         )
+
+    answer_hash = hash_captcha_answer(
+        user.captcha_id,
+        normalized_answer
+    )
 
     if not secrets.compare_digest(
         challenge["answer_hash"],
@@ -225,7 +178,7 @@ async def login_user(user: UserLogin):
             detail="Incorrect CAPTCHA. Please try again."
         )
 
-    # CAPTCHA CAN ONLY BE USED ONCE
+    # 3. CAPTCHA CAN ONLY BE USED ONCE
 
     consumed = await database.captcha_challenges.delete_one({
         "captcha_id": user.captcha_id,
@@ -240,7 +193,7 @@ async def login_user(user: UserLogin):
             detail="CAPTCHA already used or expired. Please refresh it."
         )
 
-    # 3. FIND USER
+    # 4. FIND USER
 
     existing_user = await database.users.find_one({
         "email": email
@@ -261,7 +214,7 @@ async def login_user(user: UserLogin):
         except (ValueError, TypeError, AttributeError):
             password_valid = False
 
-    # 4. VERIFY PASSWORD
+    # 5. VERIFY PASSWORD
 
     if not existing_user or not password_valid:
 
@@ -278,7 +231,7 @@ async def login_user(user: UserLogin):
             detail="Invalid email or password."
         )
 
-    # 5. VERIFY ROLE
+    # 6. VERIFY ROLE
 
     role = str(
         existing_user.get("role") or "customer"
@@ -314,7 +267,7 @@ async def login_user(user: UserLogin):
             detail="Invalid email or password."
         )
 
-    # 6. VERIFY EMAIL
+    # 7. VERIFY EMAIL
 
     if not existing_user.get("email_verified", False):
         raise HTTPException(
@@ -322,7 +275,7 @@ async def login_user(user: UserLogin):
             detail="Please verify your email before logging in."
         )
 
-    # 7. SUCCESS
+    # 8. LOGIN SUCCESS
 
     clear_login_attempts(email, "common")
 

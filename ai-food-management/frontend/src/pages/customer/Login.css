@@ -2579,3 +2579,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* MATH CAPTCHA */
+
+.math-captcha-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 65px;
+  padding: 10px 14px;
+  background: #f8e8df;
+  border: 1px solid #e7e0d8;
+  border-radius: 10px;
+  gap: 12px;
+}
+
+.math-captcha-question {
+  flex: 1;
+  text-align: center;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #292524;
+  user-select: none;
+}
+
+.math-captcha-display .captcha-refresh {
+  flex-shrink: 0;
+}
+

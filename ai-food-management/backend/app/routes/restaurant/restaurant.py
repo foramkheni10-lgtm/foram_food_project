@@ -137,6 +137,56 @@ async def generate_restaurant_signup_captcha():
         "captcha_image": captcha_image,
         "expires_in": 300
     }
+
+# ==========================================================
+# RESTAURANT LOGIN MATH CAPTCHA
+# ==========================================================
+
+def generate_restaurant_login_math_captcha():
+    operation = secrets.choice(["+", "-", "*"])
+
+    if operation == "+":
+        first = secrets.randbelow(30) + 1
+        second = secrets.randbelow(30) + 1
+        answer = first + second
+
+    elif operation == "-":
+        first = secrets.randbelow(30) + 10
+        second = secrets.randbelow(first)
+        answer = first - second
+
+    else:
+        first = secrets.randbelow(9) + 2
+        second = secrets.randbelow(9) + 2
+        answer = first * second
+
+    return f"{first} {operation} {second}", str(answer)
+
+
+@router.get("/login-captcha")
+async def generate_restaurant_login_captcha():
+    question, answer = generate_restaurant_login_math_captcha()
+
+    captcha_id = secrets.token_urlsafe(24)
+
+    answer_hash = hashlib.sha256(
+        f"{captcha_id}:{answer}".encode("utf-8")
+    ).hexdigest()
+
+    await database.captcha_challenges.insert_one({
+        "captcha_id": captcha_id,
+        "answer_hash": answer_hash,
+        "purpose": "restaurant_login",
+        "attempts": 0,
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=5)
+    })
+
+    return {
+        "captcha_id": captcha_id,
+        "captcha_question": question,
+        "expires_in": 300
+    }
+
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
@@ -813,6 +863,7 @@ async def resend_restaurant_verification(
 # ==========================================================
 
 
+
 @router.post("/login")
 async def login_restaurant(data: RestaurantLogin):
 
@@ -824,23 +875,22 @@ async def login_restaurant(data: RestaurantLogin):
     if remaining > 0:
         raise HTTPException(
             status_code=429,
-            detail="Too many failed login attempts. Try again in {} seconds.".format(
-                remaining
+            detail=(
+                "Too many failed login attempts. "
+                f"Try again in {remaining} seconds."
             )
         )
 
     # 2. VERIFY CAPTCHA
     answer_hash = hashlib.sha256(
-        "{}:{}".format(
-            data.captcha_id,
-            data.captcha_answer.strip()
-        ).encode()
+        f"{data.captcha_id}:{data.captcha_answer.strip()}".encode("utf-8")
     ).hexdigest()
 
     now = datetime.now(timezone.utc)
 
     challenge = await database.captcha_challenges.find_one({
         "captcha_id": data.captcha_id,
+        "purpose": "restaurant_login",
         "expires_at": {"$gt": now},
         "attempts": {"$lt": 5}
     })
@@ -851,35 +901,30 @@ async def login_restaurant(data: RestaurantLogin):
             detail="CAPTCHA expired or invalid. Please refresh it."
         )
 
-    
+    # 3. CHECK CAPTCHA ANSWER
     if not secrets.compare_digest(
-        challenge["answer_hash"],
+        challenge.get("answer_hash", ""),
         answer_hash
     ):
         await database.captcha_challenges.update_one(
             {
-                "captcha_id": data.captcha_id,
+                "_id": challenge["_id"],
+                "purpose": "restaurant_login",
                 "attempts": {"$lt": 5}
             },
             {"$inc": {"attempts": 1}}
         )
 
-        lock_seconds = record_failed_login(email, "restaurant")
-
-        if lock_seconds:
-            raise HTTPException(
-                status_code=429,
-                detail="3 failed attempts. Restaurant login locked for 2 minutes."
-            )
-
         raise HTTPException(
             status_code=400,
-            detail="Incorrect CAPTCHA answer."
+            detail="Incorrect CAPTCHA answer. Please try again."
         )
 
-    # CAPTCHA CAN ONLY BE USED ONCE
+    # 4. CONSUME CAPTCHA (ONE-TIME USE)
     consumed = await database.captcha_challenges.delete_one({
+        "_id": challenge["_id"],
         "captcha_id": data.captcha_id,
+        "purpose": "restaurant_login",
         "answer_hash": answer_hash,
         "expires_at": {"$gt": now},
         "attempts": {"$lt": 5}
@@ -891,7 +936,7 @@ async def login_restaurant(data: RestaurantLogin):
             detail="CAPTCHA already used or expired. Please refresh it."
         )
 
-    # 3. FIND RESTAURANT
+    # 5. FIND RESTAURANT
     restaurant = restaurants_collection.find_one({
         "email": {
             "$regex": f"^{re.escape(email)}$",
@@ -912,10 +957,13 @@ async def login_restaurant(data: RestaurantLogin):
         except (ValueError, TypeError):
             password_correct = False
 
-    # 4. VERIFY PASSWORD
+    # 6. VERIFY PASSWORD
     if not restaurant or not password_correct:
 
-        lock_seconds = record_failed_login(email, "restaurant")
+        lock_seconds = record_failed_login(
+            email,
+            "restaurant"
+        )
 
         if lock_seconds:
             raise HTTPException(
@@ -931,24 +979,24 @@ async def login_restaurant(data: RestaurantLogin):
             detail="Invalid email or password."
         )
 
-    # 5. VERIFY EMAIL
+    # 7. VERIFY EMAIL
     if restaurant.get("email_verified") is not True:
         raise HTTPException(
             status_code=403,
             detail="Please verify your restaurant email before logging in."
         )
 
-    # 6. VERIFY ACCOUNT STATUS
+    # 8. VERIFY ACCOUNT STATUS
     if str(restaurant.get("status", "")).lower() != "active":
         raise HTTPException(
             status_code=403,
             detail="Your restaurant account is not active."
         )
 
-    # 7. RESET FAILED ATTEMPTS
+    # 9. RESET FAILED LOGIN ATTEMPTS
     clear_login_attempts(email, "restaurant")
 
-    # 8. GENERATE RESTAURANT TOKEN
+    # 10. GENERATE RESTAURANT TOKEN
     restaurant_id = str(restaurant["_id"])
 
     expiry_minutes = (
