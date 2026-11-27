@@ -26,9 +26,9 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const [captchaId, setCaptchaId] = useState("");
- 
   const [captchaAnswer, setCaptchaAnswer] = useState("");
-   const [captchaImage, setCaptchaImage] = useState("");
+  const [captchaImage, setCaptchaImage] = useState("");
+
   const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -41,29 +41,30 @@ function Login() {
   const successMessage = location.state?.message as string | undefined;
 
   // --------------------------------------------------
-  // REFRESH IMAGE CAPTCHA
+  // REFRESH CAPTCHA
   // --------------------------------------------------
 
   const refreshCaptcha = async () => {
-  setCaptchaLoading(true);
+    setCaptchaLoading(true);
 
-  try {
-    const response = await axios.get<CaptchaData>(
-      `${API_URL}/customer/captcha`
-    );
+    try {
+      const response = await axios.get<CaptchaData>(
+        `${API_URL}/customer/captcha`
+      );
 
-    setCaptchaId(response.data.captcha_id);
-    setCaptchaImage(response.data.captcha_image);
-    setCaptchaAnswer("");
-  } catch (err) {
-    console.error("CAPTCHA loading failed:", err);
-    setCaptchaId("");
-    setCaptchaImage("");
-    setError("Unable to load CAPTCHA. Please refresh.");
-  } finally {
-    setCaptchaLoading(false);
-  }
-};
+      setCaptchaId(response.data.captcha_id);
+      setCaptchaImage(response.data.captcha_image);
+      setCaptchaAnswer("");
+    } catch (err) {
+      console.error("CAPTCHA loading failed:", err);
+
+      setCaptchaId("");
+      setCaptchaImage("");
+      setError("Unable to load CAPTCHA. Please refresh.");
+    } finally {
+      setCaptchaLoading(false);
+    }
+  };
 
   useEffect(() => {
     refreshCaptcha();
@@ -74,20 +75,21 @@ function Login() {
   // --------------------------------------------------
 
   const handleAccountTypeChange = (value: AccountType) => {
-  setAccountType(value);
-  setError("");
-  setSubmitted(false);
-  setTouched({});
-  setPassword("");
-  setCaptchaAnswer("");
-  setCaptchaId("");
-  setCaptchaImage("");
-  setShowPassword(false);
+    setAccountType(value);
+    setError("");
+    setSubmitted(false);
+    setTouched({});
+    setPassword("");
+    setCaptchaAnswer("");
+    setCaptchaId("");
+    setCaptchaImage("");
+    setShowPassword(false);
 
-  refreshCaptcha();
-};
+    refreshCaptcha();
+  };
+
   // --------------------------------------------------
-  // LIVE VALIDATION
+  // VALIDATION
   // --------------------------------------------------
 
   const errors = {
@@ -156,15 +158,13 @@ function Login() {
 
         localStorage.setItem("token", data.access_token);
         localStorage.setItem("restaurantId", data.restaurant_id);
-
         localStorage.setItem(
           "restaurantName",
           data.restaurantName || ""
         );
-
         localStorage.setItem(
           "restaurantEmail",
-          email.trim()
+          email.trim().toLowerCase()
         );
 
         navigate("/restaurant/dashboard", { replace: true });
@@ -202,33 +202,31 @@ function Login() {
 
       navigate(data.next_page || "/", { replace: true });
 
-    }  catch (err: unknown) {
-  let message = "Login failed. Please try again.";
+    } catch (err: unknown) {
+      let message = "Login failed. Please try again.";
 
-  if (axios.isAxiosError(err)) {
-    const detail = err.response?.data?.detail;
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
 
-    if (typeof detail === "string") {
-      message = detail;
-    } else if (err.response?.status === 500) {
-      message = "Server error. Please try again later.";
-    } else if (!err.response) {
-      message = "Unable to connect to the server.";
-    }
-  }
+        if (typeof detail === "string") {
+          message = detail;
+        } else if (err.response?.status === 500) {
+          message = "Server error. Please try again later.";
+        } else if (!err.response) {
+          message = "Unable to connect to the server.";
+        }
+      }
 
-  setError(message);
+      setError(message);
 
-  await refreshCaptcha();
+      await refreshCaptcha();
 
-  setTouched((prev) => ({
-    ...prev,
-    captcha: false,
-  }));
+      setTouched((prev) => ({
+        ...prev,
+        captcha: false,
+      }));
 
-  setSubmitted(false);
-
-
+      setSubmitted(false);
 
     } finally {
       setLoading(false);
@@ -299,7 +297,6 @@ function Login() {
               </span>
 
               <h2>Login to your account</h2>
-
               <p>Enter your details to continue.</p>
             </div>
 
@@ -405,9 +402,7 @@ function Login() {
                       setShowPassword((prev) => !prev)
                     }
                     aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
+                      showPassword ? "Hide password" : "Show password"
                     }
                   >
                     {showPassword ? (
@@ -427,65 +422,63 @@ function Login() {
 
               {/* IMAGE CAPTCHA */}
 
-{/* IMAGE CAPTCHA */}
+              <div className="form-group captcha-group">
+                <label htmlFor="captchaAnswer">
+                  CAPTCHA *
+                </label>
 
-<div className="form-group captcha-group">
-  <label htmlFor="captchaAnswer">CAPTCHA *</label>
+                <div className="captcha-display">
+                  {captchaImage ? (
+                    <img
+                      src={captchaImage}
+                      alt="CAPTCHA verification"
+                      className="captcha-image"
+                    />
+                  ) : (
+                    <div className="captcha-placeholder">
+                      {captchaLoading
+                        ? "Loading CAPTCHA..."
+                        : "CAPTCHA unavailable"}
+                    </div>
+                  )}
 
-  <div className="captcha-display">
-    {captchaImage ? (
-      <img
-        src={captchaImage}
-        alt="CAPTCHA verification"
-        className="captcha-image"
-      />
-    ) : (
-      <div className="captcha-placeholder">
-        {captchaLoading ? "Loading CAPTCHA..." : "CAPTCHA unavailable"}
-      </div>
-    )}
+                  <button
+                    type="button"
+                    className="captcha-refresh"
+                    onClick={refreshCaptcha}
+                    disabled={captchaLoading || loading}
+                    title="Refresh CAPTCHA"
+                  >
+                    <RefreshCw size={18} />
+                  </button>
+                </div>
 
-    <button
-      type="button"
-      className="captcha-refresh"
-      onClick={refreshCaptcha}
-      disabled={captchaLoading || loading}
-      title="Refresh CAPTCHA"
-    >
-      <RefreshCw size={18} />
-    </button>
-  </div>
+                <input
+                  id="captchaAnswer"
+                  type="text"
+                  value={captchaAnswer}
+                  onChange={(e) =>
+                    setCaptchaAnswer(e.target.value.toUpperCase())
+                  }
+                  onBlur={() =>
+                    setTouched((prev) => ({
+                      ...prev,
+                      captcha: true,
+                    }))
+                  }
+                  placeholder="Enter CAPTCHA characters"
+                  maxLength={6}
+                  autoComplete="off"
+                  disabled={loading}
+                  className={showError("captcha") ? "input-error" : ""}
+                />
 
-  <input
-    id="captchaAnswer"
-    type="text"
-    value={captchaAnswer}
-    onChange={(e) =>
-      setCaptchaAnswer(e.target.value.toUpperCase())
-    }
-    onBlur={() =>
-      setTouched((prev) => ({ ...prev, captcha: true }))
-    }
-    placeholder="Enter CAPTCHA characters"
-    maxLength={6}
-    autoComplete="off"
-    disabled={loading}
-    className={showError("captcha") ? "input-error" : ""}
-  />
-
-  {showError("captcha") && (
-    <small className="field-error">{errors.captcha}</small>
-  )}
-</div>
-
-<input
-  type="text"
-  value={captchaAnswer}
-  onChange={(e) => setCaptchaAnswer(e.target.value.toUpperCase())}
-  placeholder="Enter CAPTCHA characters"
-  maxLength={6}
-  autoComplete="off"
-/>
+                {showError("captcha") && (
+                  <small className="field-error">
+                    {errors.captcha}
+                  </small>
+                )}
+              </div>
 
               {/* REMEMBER ME */}
 
@@ -508,16 +501,10 @@ function Login() {
 
               <button
                 type="submit"
-                disabled={
-                  loading ||
-                  captchaLoading ||
-                  !captchaId
-                }
+                disabled={loading || captchaLoading || !captchaId}
                 className="auth-submit-btn"
               >
-                {loading
-                  ? "Logging in..."
-                  : loginButtonText}
+                {loading ? "Logging in..." : loginButtonText}
               </button>
 
             </form>

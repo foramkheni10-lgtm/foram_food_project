@@ -69,6 +69,7 @@ async def get_current_restaurant(
 # GET FEEDBACK FOR LOGGED-IN RESTAURANT
 # ==========================================================
 
+
 @router.get("/my-feedback")
 async def get_my_restaurant_feedback(
     restaurant=Depends(get_current_restaurant)
@@ -77,22 +78,76 @@ async def get_my_restaurant_feedback(
 
     feedback_cursor = database.feedback.find({
         "restaurant_id": {
-            "$in": [
-                restaurant_id,
-                ObjectId(restaurant_id)
-            ]
+            "$in": [restaurant_id, ObjectId(restaurant_id)]
         }
     }).sort("created_at", -1)
 
     feedback_records = await feedback_cursor.to_list(length=500)
-
     feedbacks = []
 
     for item in feedback_records:
+        order_id = str(item.get("order_id", ""))
+        order = None
+
+        # Find order using its MongoDB ID
+        if ObjectId.is_valid(order_id):
+            order = await database.orders.find_one({
+                "_id": ObjectId(order_id)
+            })
+
+        if not order:
+            order = await database.orders.find_one({
+                "_id": order_id
+            })
+
+        food_names = []
+
+        if order:
+            for food in order.get("items", []):
+                food_name = food.get("name") or food.get("food_name", "")
+
+                # If the order name is actually the restaurant name,
+                # retrieve the food name from the foods collection.
+                food_id = food.get("food_id")
+
+                if food_id and (
+                    not food_name
+                    or food_name.strip().lower()
+                    == food.get("restaurant_name", "").strip().lower()
+                ):
+                    food_doc = None
+
+                    if ObjectId.is_valid(str(food_id)):
+                        food_doc = await database.foods.find_one({
+                            "_id": ObjectId(str(food_id))
+                        })
+
+                    if not food_doc:
+                        food_doc = await database.foods.find_one({
+                            "_id": str(food_id)
+                        })
+
+                    if food_doc:
+                        food_name = (
+                            food_doc.get("name")
+                            or food_doc.get("food_name")
+                            or food_name
+                        )
+
+                if food_name and food_name not in food_names:
+                    food_names.append(food_name)
+
+        food_name = ", ".join(food_names) if food_names else "Food item"
+        order_date = order.get("created_at") if order else None
+
         feedbacks.append({
             "_id": str(item["_id"]),
-            "order_id": str(item.get("order_id", "")),
+            "order_id": order_id,
             "order_number": item.get("order_number", ""),
+            "food_name": food_name,
+            "food_item_name": food_name,
+            "order_date": order_date,
+            "order_created_at": order_date,
             "customer_name": item.get("customer_name", "Customer"),
             "customer_email": item.get("customer_email", ""),
             "rating": int(item.get("rating", 0)),
@@ -107,13 +162,12 @@ async def get_my_restaurant_feedback(
     total_reviews = len(feedbacks)
 
     average_rating = (
-        round(
-            sum(item["rating"] for item in feedbacks) / total_reviews,
-            1
-        )
-        if total_reviews > 0
-        else 0
+        round(sum(f["rating"] for f in feedbacks) / total_reviews, 1)
+        if total_reviews else 0
     )
+
+    positive_reviews = sum(1 for f in feedbacks if f["rating"] >= 4)
+    five_star_reviews = sum(1 for f in feedbacks if f["rating"] == 5)
 
     return {
         "success": True,
@@ -121,5 +175,7 @@ async def get_my_restaurant_feedback(
         "restaurant_name": restaurant.get("restaurantName", ""),
         "total_reviews": total_reviews,
         "average_rating": average_rating,
+        "positive_reviews": positive_reviews,
+        "five_star_reviews": five_star_reviews,
         "feedbacks": feedbacks
     }

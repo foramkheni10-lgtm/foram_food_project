@@ -1,5 +1,4 @@
 
-
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // Customer Layout
@@ -15,18 +14,19 @@ import Restaurants from "./pages/customer/Restaurants";
 import Cart from "./pages/customer/Cart";
 import Checkout from "./pages/customer/Checkout";
 import MyOrders from "./pages/customer/MyOrders";
-import Feedback from "./pages/customer/Feedback";
+import CustomerFeedback from "./pages/customer/Feedback";
 import TermsAndConditions from "./pages/customer/TermsAndConditions";
 import PrivacyPolicy from "./pages/customer/PrivacyPolicy";
 import BestSellers from "./pages/customer/BestSellers";
 
-import Suppliers from "./pages/admin/Suppliers";
-import PurchaseOrders from "./pages/admin/PurchaseOrders";
-// Admin Layout
-import ScrollToTop from "./components/ScrollToTop";
-import AdminLayout from "./components/admin/Layout";
+// Customer Authentication
+import VerifyEmail from "./pages/customer/VerifyEmail";
+import ForgotPassword from "./pages/customer/ForgotPassword";
+import ResetPassword from "./pages/customer/ResetPassword";
 
 // Admin Pages
+import Suppliers from "./pages/admin/Suppliers";
+import PurchaseOrders from "./pages/admin/PurchaseOrders";
 import Dashboard from "./pages/admin/Dashboard";
 import Orders from "./pages/admin/Orders";
 import AdminRestaurants from "./pages/admin/Restaurants";
@@ -39,6 +39,10 @@ import AdminFeedback from "./pages/admin/Feedback";
 import Analytics from "./pages/admin/Analytics";
 import AIAnalysis from "./pages/admin/AIAnalysis";
 import Settings from "./pages/admin/Settings";
+import AdminLayout from "./components/admin/Layout";
+
+// Common Components
+import ScrollToTop from "./components/ScrollToTop";
 
 // Restaurant Pages
 import RestaurantRegister from "./pages/restaurant/RestaurantRegister";
@@ -47,12 +51,11 @@ import RestaurantMenu from "./pages/restaurant/RestaurantMenu";
 import RestaurantOrders from "./pages/restaurant/RestaurantOrders";
 import RestaurantTables from "./pages/restaurant/RestaurantTables";
 import AIAnalytics from "./pages/restaurant/AIAnalytics";
-import { RestaurantThemeProvider } from "./theme/RestaurantThemeContext";
-
-import VerifyEmail from "./pages/customer/VerifyEmail";
-import ForgotPassword from "./pages/customer/ForgotPassword";
-import ResetPassword from "./pages/customer/ResetPassword";
+import RestaurantFeedback from "./pages/restaurant/Feedback";
 import RestaurantVerifyEmail from "./pages/restaurant/RestaurantVerifyEmail";
+
+// Restaurant Theme
+import { RestaurantThemeProvider } from "./theme/RestaurantThemeContext";
 
 function App() {
   return (
@@ -60,12 +63,15 @@ function App() {
       <ScrollToTop />
 
       <Routes>
+        {/* ================= RESTAURANT EMAIL VERIFICATION ================= */}
+
         <Route
-  path="/restaurant/verify-email"
-  element={<RestaurantVerifyEmail />}
-/>
+          path="/restaurant/verify-email"
+          element={<RestaurantVerifyEmail />}
+        />
+
         {/* ================= CUSTOMER ROUTES ================= */}
-        
+
         <Route element={<CustomerLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -76,7 +82,13 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/my-orders" element={<MyOrders />} />
-          <Route path="/feedback" element={<Feedback />} />
+
+          {/* Customer Feedback */}
+          <Route
+            path="/feedback"
+            element={<CustomerFeedback />}
+          />
+
           <Route path="/best-sellers" element={<BestSellers />} />
 
           <Route
@@ -88,9 +100,10 @@ function App() {
             path="/privacy-policy"
             element={<PrivacyPolicy />}
           />
+
           <Route path="/verify-email" element={<VerifyEmail />} />
-<Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* ================= ADMIN ROUTES ================= */}
@@ -109,28 +122,60 @@ function App() {
           <Route path="ai-analysis" element={<AIAnalysis />} />
           <Route path="settings" element={<Settings />} />
           <Route path="suppliers" element={<Suppliers />} />
-<Route path="purchase-orders" element={<PurchaseOrders />} />
+          <Route path="purchase-orders" element={<PurchaseOrders />} />
         </Route>
 
         {/* ================= RESTAURANT ROUTES ================= */}
 
         <Route
-  path="/restaurant/*"
-  element={
-    <RestaurantThemeProvider>
-      <Routes>
-        <Route path="login" element={<Navigate to="/login" replace />} />
-        <Route path="register" element={<RestaurantRegister />} />
-        <Route path="dashboard" element={<RestaurantDashboard />} />
-        <Route path="menu" element={<RestaurantMenu />} />
-        <Route path="orders" element={<RestaurantOrders />} />
-        <Route path="tables" element={<RestaurantTables />} />
-        <Route path="ai-analytics" element={<AIAnalytics />} />
-        <Route path="feedback" element={<Feedback />} />
-      </Routes>
-    </RestaurantThemeProvider>
-  }
-/>
+          path="/restaurant/*"
+          element={
+            <RestaurantThemeProvider>
+              <Routes>
+                <Route
+                  path="login"
+                  element={<Navigate to="/login" replace />}
+                />
+
+                <Route
+                  path="register"
+                  element={<RestaurantRegister />}
+                />
+
+                <Route
+                  path="dashboard"
+                  element={<RestaurantDashboard />}
+                />
+
+                <Route
+                  path="menu"
+                  element={<RestaurantMenu />}
+                />
+
+                <Route
+                  path="orders"
+                  element={<RestaurantOrders />}
+                />
+
+                <Route
+                  path="tables"
+                  element={<RestaurantTables />}
+                />
+
+                <Route
+                  path="ai-analytics"
+                  element={<AIAnalytics />}
+                />
+
+                {/* Restaurant Feedback */}
+                <Route
+                  path="feedback"
+                  element={<RestaurantFeedback />}
+                />
+              </Routes>
+            </RestaurantThemeProvider>
+          }
+        />
       </Routes>
     </>
   );

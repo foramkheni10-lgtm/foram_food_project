@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { CalendarDays, RefreshCw, Star, MessageCircle, ThumbsUp, Trophy } from "lucide-react";
 
 import RestaurantSidebar from "./RestaurantSidebar";
 import "../../styles/restaurant/Feedback.css";
@@ -32,79 +31,95 @@ interface FeedbackResponse {
   restaurant_name: string;
   total_reviews: number;
   average_rating: number;
+  positive_reviews?: number;
+  five_star_reviews?: number;
   feedbacks: FeedbackItem[];
 }
 
-const getAuthConfig = () => {
-  const token = localStorage.getItem("token");
+const getRestaurantToken = () => {
+  const possibleKeys = [
+    "token",
+    "restaurant_token",
+    "restaurantToken",
+    "access_token",
+  ];
 
-  if (!token) {
-    throw new Error("Session expired. Please login again.");
+  for (const key of possibleKeys) {
+    const value = localStorage.getItem(key);
+
+    if (value && value.trim()) {
+      return value;
+    }
   }
 
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  return null;
 };
 
 function Feedback() {
   const navigate = useNavigate();
-
-  const restaurantName =
-    localStorage.getItem("restaurantName") || "Your Restaurant";
 
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState("All");
+  const [restaurantName, setRestaurantName] = useState(
+    localStorage.getItem("restaurantName") || "Restaurant"
+  );
 
   const fetchFeedback = useCallback(async () => {
     try {
       setError("");
 
+      const token = getRestaurantToken();
+
+      if (!token) {
+        setError("Restaurant login token not found. Please login again.");
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get<FeedbackResponse>(
         `${API}/api/restaurant-feedback/my-feedback`,
-        getAuthConfig()
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setFeedbacks(response.data.feedbacks || []);
+
+      if (response.data.restaurant_name) {
+        setRestaurantName(response.data.restaurant_name);
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-          return;
+          setError(
+            "Restaurant authentication failed. Please logout and login again using your restaurant account."
+          );
+        } else {
+          setError(
+            err.response?.data?.detail ||
+              "Unable to load customer feedback."
+          );
         }
-
-        setError(
-          err.response?.data?.detail ||
-            "Unable to load customer feedback."
-        );
-      } else if (err instanceof Error) {
-        setError(err.message);
       } else {
         setError("Unable to load customer feedback.");
       }
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      navigate("/login");
-      return;
-    }
-
     fetchFeedback();
 
     const interval = window.setInterval(fetchFeedback, 30000);
 
     return () => window.clearInterval(interval);
-  }, [navigate, fetchFeedback]);
+  }, [fetchFeedback]);
 
   const averageRating = feedbacks.length
     ? (
@@ -123,11 +138,16 @@ function Feedback() {
     (item) => Number(item.rating) === 5
   ).length;
 
+  const getRatingCount = (rating: number) =>
+    feedbacks.filter(
+      (item) => Number(item.rating) === rating
+    ).length;
+
   const filteredFeedbacks = useMemo(() => {
     const searchText = search.toLowerCase().trim();
 
     return feedbacks.filter((item) => {
-      const matchesSearch = [
+      const values = [
         item.customer_name,
         item.customer_email,
         item.comment,
@@ -135,9 +155,13 @@ function Feedback() {
         item.order_id,
         item.food_name,
         item.food_item_name,
-      ].some((value) =>
-        (value || "").toLowerCase().includes(searchText)
-      );
+      ];
+
+      const matchesSearch =
+        !searchText ||
+        values.some((value) =>
+          (value || "").toLowerCase().includes(searchText)
+        );
 
       const matchesRating =
         ratingFilter === "All" ||
@@ -173,10 +197,7 @@ function Feedback() {
     );
 
     return (
-      <span
-        className="feedback-stars"
-        aria-label={`${safeRating} out of 5 stars`}
-      >
+      <span className="feedback-stars">
         {"★".repeat(safeRating)}
         <span className="feedback-empty-stars">
           {"★".repeat(5 - safeRating)}
@@ -192,7 +213,7 @@ function Feedback() {
       <div className="restaurant-content-area">
         <main className="feedback-page">
           <header className="feedback-header">
-            <div className="feedback-title-area">
+            <div>
               <span className="feedback-eyebrow">
                 CUSTOMER EXPERIENCE
               </span>
@@ -200,26 +221,18 @@ function Feedback() {
               <h1>Customer Feedback</h1>
 
               <p>
-                Read customer reviews and ratings for your restaurant
+                See what customers are saying about your food at{" "}
+                {restaurantName}.
               </p>
             </div>
 
-            <div className="feedback-header-actions">
-              <div className="feedback-restaurant-chip">
-                <span className="feedback-restaurant-icon">🍴</span>
-                <span>{restaurantName}</span>
-              </div>
-
-              <button
-                className="feedback-refresh-btn"
-                onClick={fetchFeedback}
-                disabled={loading}
-                title="Refresh feedback"
-              >
-                <RefreshCw size={17} />
-                Refresh
-              </button>
-            </div>
+            <button
+              className="feedback-refresh-btn"
+              onClick={fetchFeedback}
+              disabled={loading}
+            >
+              ↻ Refresh
+            </button>
           </header>
 
           {error && (
@@ -231,79 +244,68 @@ function Feedback() {
 
           {loading ? (
             <div className="feedback-loading">
-              <div className="feedback-loader" />
+              <span>⏳</span>
               <p>Loading customer feedback...</p>
             </div>
           ) : (
             <>
               <section className="feedback-stats">
-                <article className="feedback-stat-card">
-                  <div className="feedback-stat-icon">
-                    <Star size={27} fill="currentColor" />
-                  </div>
-
-                  <div className="feedback-stat-content">
-                    <h2>
-                      {averageRating}
-                      <span className="feedback-stat-star">★</span>
-                    </h2>
+                <div className="feedback-stat-card">
+                  <div className="feedback-stat-icon">⭐</div>
+                  <div>
                     <p>Average Rating</p>
-                    <div className="feedback-stat-stars">
-                      {renderStars(Number(averageRating))}
-                    </div>
+                    <h2>{averageRating} / 5</h2>
+                    {renderStars(Number(averageRating))}
                   </div>
-                </article>
+                </div>
 
-                <article className="feedback-stat-card">
-                  <div className="feedback-stat-icon">
-                    <MessageCircle size={27} fill="currentColor" />
-                  </div>
-
-                  <div className="feedback-stat-content">
-                    <h2>{feedbacks.length}</h2>
+                <div className="feedback-stat-card">
+                  <div className="feedback-stat-icon">💬</div>
+                  <div>
                     <p>Total Reviews</p>
-                    <span>Customer feedback received</span>
+                    <h2>{feedbacks.length}</h2>
+                    <span>Customer reviews received</span>
                   </div>
-                </article>
+                </div>
 
-                <article className="feedback-stat-card">
-                  <div className="feedback-stat-icon">
-                    <ThumbsUp size={27} fill="currentColor" />
-                  </div>
-
-                  <div className="feedback-stat-content">
-                    <h2>{positiveReviews}</h2>
+                <div className="feedback-stat-card">
+                  <div className="feedback-stat-icon">👍</div>
+                  <div>
                     <p>Positive Reviews</p>
+                    <h2>{positiveReviews}</h2>
                     <span>Ratings of 4 and 5 stars</span>
                   </div>
-                </article>
+                </div>
 
-                <article className="feedback-stat-card">
-                  <div className="feedback-stat-icon">
-                    <Trophy size={27} fill="currentColor" />
-                  </div>
-
-                  <div className="feedback-stat-content">
-                    <h2>{fiveStarReviews}</h2>
+                <div className="feedback-stat-card">
+                  <div className="feedback-stat-icon">🌟</div>
+                  <div>
                     <p>5-Star Reviews</p>
-                    <span>Excellent ratings</span>
+                    <h2>{fiveStarReviews}</h2>
+                    <span>Excellent customer ratings</span>
                   </div>
-                </article>
+                </div>
               </section>
 
-              <section className="feedback-reviews-section">
-                <div className="feedback-reviews-toolbar">
-                  <div>
-                    <h2>Customer Reviews</h2>
-                    <p>
-                      See what customers are saying about your food
-                    </p>
+              <section className="feedback-content-grid">
+                <div className="feedback-main-section">
+                  <div className="feedback-section-heading">
+                    <div>
+                      <h2>Customer Reviews</h2>
+                      <p>
+                        See what customers are saying about your food
+                      </p>
+                    </div>
+
+                    <span>
+                      {filteredFeedbacks.length} reviews
+                    </span>
                   </div>
 
-                  <div className="feedback-filters">
+                  <div className="feedback-toolbar">
                     <input
                       type="text"
-                      placeholder="Search customer, food, order..."
+                      placeholder="Search customer, food, order or comment..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
@@ -322,107 +324,152 @@ function Feedback() {
                       <option value="1">1 Star</option>
                     </select>
                   </div>
+
+                  <div className="feedback-review-list">
+                    {filteredFeedbacks.length === 0 ? (
+                      <div className="feedback-empty">
+                        <span>💬</span>
+                        <h3>No Reviews Found</h3>
+                        <p>
+                          Customer reviews will appear here when
+                          customers submit feedback for their orders.
+                        </p>
+                      </div>
+                    ) : (
+                      filteredFeedbacks.map((item) => {
+                        const customerName =
+                          item.customer_name || "Customer";
+
+                        const foodName =
+                          item.food_name ||
+                          item.food_item_name ||
+                          "Food item";
+
+                        const orderDate =
+                          item.order_date || item.order_created_at;
+
+                        return (
+                          <article
+                            className="feedback-review-card"
+                            key={item._id}
+                          >
+                            <div className="feedback-review-top">
+                              <div className="feedback-customer">
+                                <div className="feedback-avatar">
+                                  {item.customer_profile_image ? (
+                                    <img
+                                      src={item.customer_profile_image}
+                                      alt={customerName}
+                                      onError={(e) => {
+                                        e.currentTarget.style.display =
+                                          "none";
+                                      }}
+                                    />
+                                  ) : (
+                                    customerName.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+
+                                <div className="feedback-customer-info">
+                                  <h3>{customerName}</h3>
+                                  <p>
+                                    {item.customer_email ||
+                                      "Email unavailable"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="feedback-review-rating">
+                                {renderStars(item.rating)}
+                                <strong>
+                                  {Number(item.rating || 0).toFixed(1)}
+                                </strong>
+                              </div>
+                            </div>
+
+                            <div className="feedback-order-details">
+                              <div>
+                                <span>ORDER ID</span>
+                                <strong>
+                                  {item.order_number ||
+                                    item.order_id ||
+                                    "N/A"}
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span>FOOD ITEM</span>
+                                <strong>{foodName}</strong>
+                              </div>
+
+                              <div>
+                                <span>ORDER DATE</span>
+                                <strong>
+                                  {formatDate(orderDate)}
+                                </strong>
+                              </div>
+                            </div>
+
+                            <div className="feedback-comment-section">
+                              <span className="feedback-comment-label">
+                                CUSTOMER COMMENT
+                              </span>
+
+                              <p className="feedback-comment">
+                                {item.comment?.trim()
+                                  ? `“${item.comment}”`
+                                  : "Customer submitted a rating without a written comment."}
+                              </p>
+                            </div>
+
+                            <div className="feedback-review-footer">
+                              <span>
+                                <strong>Review submitted:</strong>{" "}
+                                {formatDate(item.created_at)}
+                              </span>
+                            </div>
+                          </article>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
 
-                {filteredFeedbacks.length === 0 ? (
-                  <div className="feedback-empty">
-                    <div className="feedback-empty-icon">💬</div>
-                    <h3>No Reviews Found</h3>
-                    <p>
-                      Customer reviews will appear here after customers
-                      submit feedback for their orders.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="feedback-review-grid">
-                    {filteredFeedbacks.map((item) => {
-                      const customerName =
-                        item.customer_name || "Customer";
+                <aside className="feedback-rating-breakdown">
+                  <h2>Rating Breakdown</h2>
+                  <p>Customer rating distribution</p>
 
-                      const foodName =
-                        item.food_name ||
-                        item.food_item_name ||
-                        "Food item";
+                  {[5, 4, 3, 2, 1].map((rating) => {
+                    const count = getRatingCount(rating);
 
-                      const reviewDate = formatDate(item.created_at);
+                    const percentage = feedbacks.length
+                      ? (count / feedbacks.length) * 100
+                      : 0;
 
-                      const orderDate = formatDate(
-                        item.order_date || item.order_created_at
-                      );
+                    return (
+                      <div
+                        className="feedback-breakdown-row"
+                        key={rating}
+                      >
+                        <span>{rating} ★</span>
 
-                      return (
-                        <article
-                          className="feedback-review-card"
-                          key={item._id}
-                        >
-                          <div className="feedback-card-top">
-                            <div className="feedback-customer">
-                              <div className="feedback-avatar">
-                                {item.customer_profile_image ? (
-                                  <img
-                                    src={item.customer_profile_image}
-                                    alt={customerName}
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = "none";
-                                    }}
-                                  />
-                                ) : (
-                                  customerName.charAt(0).toUpperCase()
-                                )}
-                              </div>
+                        <div className="feedback-progress">
+                          <div
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
 
-                              <div className="feedback-customer-info">
-                                <h3>{customerName}</h3>
-                                <p>
-                                  <CalendarDays size={13} />
-                                  {reviewDate}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="feedback-card-rating">
-                              {renderStars(item.rating)}
-                            </div>
-                          </div>
-
-                          <div className="feedback-food-row">
-                            <span className="feedback-food-name">
-                              {foodName}
-                            </span>
-                          </div>
-
-                          <p className="feedback-comment">
-                            {item.comment?.trim()
-                              ? `“${item.comment}”`
-                              : "Customer submitted a rating without a written comment."}
-                          </p>
-
-                          <div className="feedback-order-info">
-                            <span>
-                              Order:{" "}
-                              <strong>
-                                {item.order_number ||
-                                  item.order_id ||
-                                  "N/A"}
-                              </strong>
-                            </span>
-
-                            <span>
-                              Ordered: <strong>{orderDate}</strong>
-                            </span>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
+                        <strong>{count}</strong>
+                      </div>
+                    );
+                  })}
+                </aside>
               </section>
             </>
           )}
 
           <footer className="feedback-footer">
-            <span>Smart FoodCourt</span>
-            <span>Feedback refreshes automatically every 30 seconds.</span>
+            Feedback refreshes automatically every 30 seconds.
           </footer>
         </main>
       </div>

@@ -13,7 +13,7 @@ import {
   type RestaurantTheme,
 } from "./RestaurantTheme";
 
-const API = "http://127.0.0.1:8000";
+const API = "https://foram-food-project.onrender.com";
 
 type ThemeContextType = {
   theme: RestaurantTheme;
