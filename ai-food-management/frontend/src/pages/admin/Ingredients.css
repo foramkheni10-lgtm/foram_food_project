@@ -1,0 +1,362 @@
+
+.ingredients-page {
+  width: 100%;
+  min-height: 100%;
+  color: #292524;
+}
+
+.ingredients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.ingredients-eyebrow {
+  display: inline-block;
+  color: #c65d3a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.ingredients-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 750;
+  color: #292524;
+}
+
+.ingredients-header p {
+  margin: 8px 0 0;
+  color: #78716c;
+  font-size: 14px;
+}
+
+.ingredients-refresh,
+.ingredients-error button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #c65d3a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ingredients-refresh:hover,
+.ingredients-error button:hover {
+  background: #a94729;
+  transform: translateY(-1px);
+}
+
+/* Statistics */
+
+.ingredients-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.ingredients-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+  padding: 22px 19px;
+  background: #fff;
+  border: 1px solid #eee7df;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(80, 50, 35, 0.05);
+}
+
+.ingredients-stat-icon {
+  width: 49px;
+  height: 49px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #c65d3a;
+  background: #f8e8df;
+}
+
+.ingredients-success-icon {
+  color: #4d7c0f;
+  background: #edf5e5;
+}
+
+.ingredients-stat-card span {
+  display: block;
+  color: #78716c;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ingredients-stat-card strong {
+  display: block;
+  color: #292524;
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.ingredients-stat-card small {
+  display: block;
+  margin-top: 5px;
+  color: #a8a29e;
+  font-size: 11px;
+}
+
+/* Main card */
+
+.ingredients-main-card {
+  padding: 25px;
+  background: #fff;
+  border: 1px solid #eee7df;
+  border-radius: 15px;
+  box-shadow: 0 4px 16px rgba(80, 50, 35, 0.05);
+}
+
+.ingredients-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0ebe5;
+}
+
+.ingredients-card-header h2 {
+  margin: 0;
+  color: #292524;
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.ingredients-card-header p {
+  margin: 7px 0 0;
+  color: #78716c;
+  font-size: 13px;
+}
+
+.ingredients-card-icon {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #f8e8df;
+  color: #c65d3a;
+}
+
+/* Healthy state */
+
+.ingredients-healthy {
+  min-height: 245px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 35px 15px;
+}
+
+.ingredients-healthy-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #edf5e5;
+  color: #4d7c0f;
+  margin-bottom: 17px;
+}
+
+.ingredients-healthy h3 {
+  margin: 0;
+  color: #292524;
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.ingredients-healthy p {
+  max-width: 430px;
+  margin: 9px 0 0;
+  color: #78716c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Low stock */
+
+.ingredients-low-stock {
+  padding-top: 22px;
+}
+
+.ingredients-warning-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 17px;
+  color: #d97706;
+}
+
+.ingredients-warning-title h3 {
+  margin: 0;
+  color: #292524;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 16px;
+  margin-bottom: 10px;
+  border: 1px solid #f1e7dc;
+  border-radius: 10px;
+  background: #fffaf5;
+  color: #c65d3a;
+}
+
+.ingredient-item > span:first-of-type {
+  flex: 1;
+  color: #44403c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ingredient-low-badge {
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #fff0db;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Backend information */
+
+.ingredients-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-top: 22px;
+  padding: 19px 21px;
+  border: 1px solid #f0d9c8;
+  border-radius: 12px;
+  background: #fff8f2;
+  color: #c65d3a;
+}
+
+.ingredients-info-card > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ingredients-info-card h3 {
+  margin: 0 0 6px;
+  color: #292524;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.ingredients-info-card p {
+  margin: 0;
+  color: #78716c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* Loading and error */
+
+.ingredients-loading,
+.ingredients-error {
+  min-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  text-align: center;
+  color: #c65d3a;
+}
+
+.ingredients-loading svg {
+  animation: ingredients-spin 1s linear infinite;
+}
+
+.ingredients-loading p,
+.ingredients-error p {
+  color: #78716c;
+  font-size: 14px;
+}
+
+.ingredients-error button {
+  margin-top: 5px;
+}
+
+@keyframes ingredients-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .ingredients-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .ingredients-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ingredients-header h1 {
+    font-size: 25px;
+  }
+
+  .ingredients-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ingredients-stat-card {
+    padding: 17px;
+  }
+
+  .ingredients-main-card {
+    padding: 18px 15px;
+  }
+
+  .ingredients-card-header h2 {
+    font-size: 17px;
+  }
+
+  .ingredient-item {
+    flex-wrap: wrap;
+  }
+
+  .ingredients-info-card {
+    padding: 16px;
+  }
+}

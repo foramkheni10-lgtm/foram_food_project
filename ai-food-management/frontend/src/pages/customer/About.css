@@ -1,0 +1,374 @@
+
+.about-page {
+  color: #343434;
+  background: #fffdf8;
+  width: 100%;
+  overflow: hidden;
+}
+
+.about-hero {
+  min-height: 390px;
+  padding: 65px 7%;
+  background: linear-gradient(120deg, #fff3d8, #fffaf0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.about-hero-content {
+  max-width: 650px;
+}
+
+.about-label,
+.about-section-heading span {
+  color: #c58b24;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.about-hero h1 {
+  font-size: clamp(34px, 4vw, 53px);
+  line-height: 1.2;
+  margin: 18px 0;
+  color: #292929;
+  font-weight: 800;
+}
+
+.about-hero h1 span {
+  display: block;
+  color: #d99b2b;
+}
+
+.about-hero p {
+  color: #6b6255;
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 570px;
+}
+
+.about-hero-btn,
+.about-cta-btn {
+  display: inline-block;
+  background: #e9c46a;
+  color: #302719;
+  padding: 13px 25px;
+  margin-top: 18px;
+  border-radius: 9px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.about-hero-btn:hover,
+.about-cta-btn:hover {
+  background: #d9a83f;
+  transform: translateY(-3px);
+}
+
+.about-hero-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 240px;
+}
+
+.about-food-circle {
+  width: 235px;
+  height: 235px;
+  border-radius: 50%;
+  background: #e9c46a;
+  color: #754d15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  box-shadow: 0 15px 35px rgba(120, 82, 20, 0.15);
+}
+
+.about-food-circle span {
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.about-story,
+.about-features,
+.about-team,
+.about-why,
+.about-mission {
+  padding: 65px 7%;
+}
+
+.about-section-heading {
+  text-align: center;
+  margin: 0 auto 38px;
+}
+
+.about-section-heading h2 {
+  font-size: 32px;
+  color: #303030;
+  margin: 10px 0;
+  font-weight: 800;
+}
+
+.about-section-heading p {
+  color: #777;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.about-story-content {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  align-items: center;
+  gap: 45px;
+  max-width: 1050px;
+  margin: auto;
+}
+
+.about-story-icon {
+  width: 200px;
+  height: 200px;
+  background: #fff0ce;
+  color: #bd8624;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-story-content h3 {
+  font-size: 23px;
+  margin-bottom: 15px;
+}
+
+.about-story-content p {
+  color: #696969;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.about-mission {
+  background: #fff8e9;
+}
+
+.about-purpose-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.about-purpose-card {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid #f0dfbd;
+  box-shadow: 0 6px 20px rgba(80, 60, 20, 0.05);
+}
+
+.about-purpose-icon,
+.about-feature-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff0ce;
+  color: #bd8624;
+  margin-bottom: 18px;
+}
+
+.about-purpose-card h3,
+.about-feature-card h3 {
+  font-size: 19px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.about-purpose-card p,
+.about-feature-card p {
+  color: #737373;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.about-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.about-feature-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 15px;
+  border: 1px solid #eee6d7;
+  transition: 0.3s;
+}
+
+.about-feature-card:hover,
+.about-team-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 25px rgba(100, 70, 20, 0.10);
+  border-color: #e9c46a;
+}
+
+.about-feature-icon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.about-why {
+  background: #fff8e9;
+}
+
+.about-why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  text-align: center;
+}
+
+.about-why-grid > div {
+  padding: 25px 15px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #f0dfbd;
+}
+
+.about-why-grid svg {
+  color: #bd8624;
+  width: 35px;
+  height: 35px;
+  margin-bottom: 12px;
+}
+
+.about-why-grid h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.about-why-grid p {
+  color: #777;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.about-team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.about-team-card {
+  border: 1px solid #eee2ca;
+  background: white;
+  padding: 23px;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+
+.about-team-number {
+  font-size: 30px;
+  font-weight: 800;
+  color: #d9a83f;
+  margin-bottom: 18px;
+}
+
+.about-team-card h3 {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+
+.about-team-card p {
+  color: #777;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.about-cta {
+  padding: 55px 20px;
+  text-align: center;
+  background: #302b22;
+  color: white;
+}
+
+.about-cta h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  margin-bottom: 12px;
+}
+
+.about-cta p {
+  color: #e6ddcd;
+  line-height: 1.7;
+}
+
+.about-cta-btn {
+  background: #e9c46a;
+}
+
+@media (max-width: 1000px) {
+  .about-feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .about-hero {
+    padding: 45px 6%;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .about-hero-icon {
+    min-width: auto;
+  }
+
+  .about-food-circle {
+    width: 185px;
+    height: 185px;
+  }
+
+  .about-story,
+  .about-features,
+  .about-team,
+  .about-why,
+  .about-mission {
+    padding: 45px 6%;
+  }
+
+  .about-section-heading h2 {
+    font-size: 26px;
+  }
+
+  .about-story-content {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .about-story-icon {
+    width: 150px;
+    height: 150px;
+    margin: auto;
+  }
+
+  .about-purpose-grid,
+  .about-feature-grid,
+  .about-team-grid,
+  .about-why-grid {
+    grid-template-columns: 1fr;
+  }
+}

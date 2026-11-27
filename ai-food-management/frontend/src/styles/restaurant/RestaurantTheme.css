@@ -1,0 +1,221 @@
+/*
+  Restaurant panel theme layer.
+  Only restaurant panel root classes are targeted; customer, admin,
+  registration and login pages are not affected.
+*/
+
+:root {
+  --theme-primary: #c65d3a;
+  --theme-secondary: #e7a66a;
+  --theme-background: #faf7f2;
+  --theme-card: #ffffff;
+  --theme-text: #292524;
+  --theme-border: color-mix(in srgb, var(--theme-primary) 22%, transparent);
+  --theme-primary-soft: color-mix(in srgb, var(--theme-primary) 12%, transparent);
+  --theme-muted: color-mix(in srgb, var(--theme-text) 65%, transparent);
+}
+
+/* Main page surfaces */
+.dashboard,
+.restaurant-menu-page,
+.orders-page,
+.tables-page,
+.ai-page {
+  background: var(--theme-background) !important;
+  color: var(--theme-text) !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dashboard cards and panels */
+.dashboard .dashboard-card,
+.dashboard .stat-card,
+.dashboard .profile-modal,
+.dashboard .profile-dropdown {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.dashboard .sidebar {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.dashboard .sidebar nav a.active,
+.dashboard .sidebar nav .sidebar-item.active {
+  background: var(--theme-primary) !important;
+  color: #fff !important;
+}
+
+.dashboard .main-content h1,
+.dashboard .main-content h2,
+.dashboard .main-content h3,
+.dashboard .main-content p,
+.dashboard .main-content strong,
+.dashboard .main-content label {
+  color: inherit;
+}
+
+.dashboard .profile-save-button,
+.dashboard .card-header button,
+.dashboard .quick-actions button {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #fff !important;
+}
+
+/* Menu page */
+.restaurant-menu-page .food-form-container,
+.restaurant-menu-page .food-card,
+.restaurant-menu-page .food-form-header,
+.restaurant-menu-page .dynamic-customization,
+.restaurant-menu-page .discount-section {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.restaurant-menu-page .menu-header h1,
+.restaurant-menu-page .food-form-header h2,
+.restaurant-menu-page .food-card h3,
+.restaurant-menu-page .dynamic-customization h3,
+.restaurant-menu-page .dynamic-option-section h4 {
+  color: var(--theme-text) !important;
+}
+
+.restaurant-menu-page .add-food-btn,
+.restaurant-menu-page .primary-button,
+.restaurant-menu-page .form-actions button[type="submit"] {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #fff !important;
+}
+
+/* Orders page */
+.orders-page .orders-summary-card,
+.orders-page .order-card,
+.orders-page .order-items-preview,
+.orders-page .order-expanded-details,
+.orders-page .orders-empty {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.orders-page .orders-header h1,
+.orders-page .order-card h3,
+.orders-page .order-items-preview h4,
+.orders-page .order-expanded-details h4 {
+  color: var(--theme-text) !important;
+}
+
+.orders-page .orders-filter-list button.active,
+.orders-page .orders-refresh-btn,
+.orders-page .orders-back-btn,
+.orders-page .order-action-btn.primary {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #fff !important;
+}
+
+/* Tables page */
+.tables-page .tables-sidebar,
+.tables-page .tables-stat-card,
+.tables-page .table-card,
+.tables-page .table-ai-overview,
+.tables-page .table-ai-insight,
+.tables-page .table-active-orders,
+.tables-page .table-alert-item {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.tables-page .tables-main h1,
+.tables-page .tables-main h2,
+.tables-page .tables-main h3,
+.tables-page .table-card strong {
+  color: var(--theme-text) !important;
+}
+
+.tables-page .tables-sidebar button.active,
+.tables-page .tables-add-btn {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #fff !important;
+}
+
+/* AI analytics page */
+.ai-page .ai-summary-card,
+.ai-page .ai-panel,
+.ai-page .ai-recommendation-card,
+.ai-page .ai-chart-panel,
+.ai-page .ai-assistant,
+.ai-page .ai-answer {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.ai-page .ai-header h1,
+.ai-page .ai-section h2,
+.ai-page .ai-panel h3,
+.ai-page .ai-recommendation-card h3 {
+  color: var(--theme-text) !important;
+}
+
+.ai-page .ai-back-btn,
+.ai-page .ai-chat-input button,
+.ai-page .ai-suggestions button {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #fff !important;
+}
+
+.ai-page .ai-chart-bar {
+  background: var(--theme-primary) !important;
+}
+
+/* Shared inputs within restaurant pages */
+.dashboard input,
+.dashboard textarea,
+.dashboard select,
+.restaurant-menu-page input,
+.restaurant-menu-page textarea,
+.restaurant-menu-page select,
+.orders-page input,
+.orders-page select,
+.tables-page input,
+.tables-page select,
+.ai-page input,
+.ai-page textarea,
+.ai-page select {
+  border-color: var(--theme-border);
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+}
+
+.dashboard input:focus,
+.dashboard textarea:focus,
+.dashboard select:focus,
+.restaurant-menu-page input:focus,
+.restaurant-menu-page textarea:focus,
+.restaurant-menu-page select:focus,
+.orders-page input:focus,
+.orders-page select:focus,
+.tables-page input:focus,
+.tables-page select:focus,
+.ai-page input:focus,
+.ai-page textarea:focus,
+.ai-page select:focus {
+  border-color: var(--theme-primary);
+  outline-color: var(--theme-primary);
+}
+
+/* Semantic order/table status badges retain their own status colors. */
+.orders-page .order-status,
+.tables-page .table-status,
+.dashboard .order-status {
+  /* Intentionally not recolored by the theme. */
+}

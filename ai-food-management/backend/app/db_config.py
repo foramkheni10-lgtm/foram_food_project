@@ -24,13 +24,24 @@ client = MongoClient(
     serverSelectionTimeoutMS=5000
 )
 
-# Select database
+# Select the actual database from .env
 db = client[DATABASE_NAME]
+
+# Restaurant collection
+restaurants_collection = db["restaurants"]
 
 
 def check_database_connection():
     try:
         client.admin.command("ping")
+
+        print("========================================")
+        print("MongoDB Atlas Connected Successfully!")
+        print("Database:", DATABASE_NAME)
+        print("Restaurant Collection:", restaurants_collection.name)
+        print("========================================")
+
         return True, "MongoDB Atlas Connected Successfully!"
+
     except Exception as e:
         return False, str(e)

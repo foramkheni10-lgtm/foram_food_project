@@ -7,7 +7,7 @@ import "./Checkout.css";
 const API = "https://foram-food-project.onrender.com";
 
 type DeliveryType = "dine_in" | "take_away" | "delivery";
-type PaymentMethod = "Cash on Delivery" | "UPI" | "Debit Card";
+type PaymentMethod = "Cash on Delivery" | "Pay Online";
 
 interface Address {
   house_number: string;
@@ -90,7 +90,8 @@ function Checkout() {
   const [addressSaved, setAddressSaved] = useState(false);
 
   const [tableNumber, setTableNumber] = useState("");
-  const [availableTables, setAvailableTables] = useState<AvailableTable[]>([]);
+  const [availableTables, setAvailableTables] =
+    useState<AvailableTable[]>([]);
   const [loadingTables, setLoadingTables] = useState(false);
   const [tableError, setTableError] = useState("");
 
@@ -147,7 +148,7 @@ function Checkout() {
     fetchCart();
   }, [navigate, token]);
 
-  // FETCH AVAILABLE TABLES WHEN DINE-IN IS SELECTED
+  // FETCH AVAILABLE TABLES
   useEffect(() => {
     if (deliveryType !== "dine_in" || !token) {
       return;
@@ -174,7 +175,9 @@ function Checkout() {
           setAvailableTables(response.data.tables || []);
 
           if (!response.data.tables?.length) {
-            setTableError("No tables are currently available. Please try again later.");
+            setTableError(
+              "No tables are currently available. Please try again later."
+            );
           }
         }
       } catch (err: any) {
@@ -199,6 +202,7 @@ function Checkout() {
     };
   }, [deliveryType, token]);
 
+  // UPDATE ADDRESS
   const updateAddress = (field: keyof Address, value: string) => {
     setAddress(prev => ({
       ...prev,
@@ -209,6 +213,7 @@ function Checkout() {
     setError("");
   };
 
+  // SAVE ADDRESS
   const saveAddress = () => {
     const requiredFields: (keyof Address)[] = [
       "house_number",
@@ -237,6 +242,34 @@ function Checkout() {
     setError("");
   };
 
+  // SUBMIT PAYU HOSTED CHECKOUT FORM
+  const submitPayuForm = (
+    paymentUrl: string,
+    params: Record<string, unknown>
+  ) => {
+    if (
+      !paymentUrl ||
+      !paymentUrl.startsWith("https://test.payu.in/")
+    ) {
+      throw new Error("Invalid PayU payment URL.");
+    }
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = paymentUrl;
+
+    Object.entries(params).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = String(value ?? "");
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  };
+
   // PLACE ORDER
   const placeOrder = async () => {
     if (!token || placingOrder) return;
@@ -259,17 +292,46 @@ function Checkout() {
     }
 
     if (deliveryType === "delivery" && !addressSaved) {
-      setError("Please save your delivery address before placing the order.");
+      setError(
+        "Please save your delivery address before placing the order."
+      );
       return;
     }
 
     setPlacingOrder(true);
 
     try {
+      // PAYU ONLINE PAYMENT
+      if (paymentMethod === "Pay Online") {
+        const response = await axios.post(
+          `${API}/api/payu/initiate`,
+          {
+            delivery_type: deliveryType,
+            table_number:
+              deliveryType === "dine_in" ? tableNumber : null,
+            delivery_address:
+              deliveryType === "delivery" ? address : null
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        submitPayuForm(
+          response.data.payment_url,
+          response.data.params
+        );
+
+        return;
+      }
+
+      // CASH ON DELIVERY
       const response = await axios.post(
         `${API}/api/orders/place`,
         {
-          payment_method: paymentMethod,
+          payment_method: "Cash on Delivery",
           delivery_type: deliveryType,
           table_number:
             deliveryType === "dine_in" ? tableNumber : null,
@@ -283,18 +345,31 @@ function Checkout() {
         }
       );
 
-      setOrderNumber(response.data.order_number);
-      setOrderTotal(response.data.total_price);
-      setConfirmedPayment(paymentMethod);
+      const order = response.data.order || response.data;
+
+      setOrderNumber(
+        order.order_number || response.data.order_number || ""
+      );
+
+      setOrderTotal(
+        Number(order.total_price ?? cart.total_price)
+      );
+
+      setConfirmedPayment("Cash on Delivery");
       setConfirmedDelivery(deliveryType);
+
     } catch (err: any) {
       setError(
         err.response?.data?.detail ||
+        err.message ||
         "Unable to place your order. Please try again."
       );
 
-      // Refresh available tables if another customer reserved one.
-      if (err.response?.status === 409 && deliveryType === "dine_in") {
+      // REFRESH TABLES IF TABLE IS NO LONGER AVAILABLE
+      if (
+        err.response?.status === 409 &&
+        deliveryType === "dine_in"
+      ) {
         setTableNumber("");
 
         try {
@@ -307,7 +382,9 @@ function Checkout() {
             }
           );
 
-          setAvailableTables(tableResponse.data.tables || []);
+          setAvailableTables(
+            tableResponse.data.tables || []
+          );
         } catch {
           setAvailableTables([]);
         }
@@ -317,6 +394,7 @@ function Checkout() {
     }
   };
 
+  // DELIVERY LABEL
   const deliveryLabel = (type: DeliveryType) => {
     switch (type) {
       case "dine_in":
@@ -329,7 +407,11 @@ function Checkout() {
   };
 
   if (loading) {
-    return <div className="checkout-status">Loading checkout...</div>;
+    return (
+      <div className="checkout-status">
+        Loading checkout...
+      </div>
+    );
   }
 
   // ORDER SUCCESS
@@ -338,8 +420,12 @@ function Checkout() {
       <main className="checkout-page">
         <section className="order-success">
           <div className="success-icon">✓</div>
+
           <h1>Order Placed Successfully!</h1>
-          <p>Thank you for ordering with Smart FoodCourt.</p>
+
+          <p>
+            Thank you for ordering with Smart FoodCourt.
+          </p>
 
           <div className="success-details">
             <div>
@@ -367,7 +453,8 @@ function Checkout() {
                 <span>Delivery Address</span>
                 <strong>
                   {address.house_number}, {address.street},{" "}
-                  {address.area}, {address.city}, {address.state} - {address.pincode}
+                  {address.area}, {address.city}, {address.state} -{" "}
+                  {address.pincode}
                 </strong>
               </div>
             )}
@@ -381,7 +468,8 @@ function Checkout() {
           </div>
 
           <p className="checkout-note">
-            This is a demo payment flow. No actual payment has been processed.
+            Cash on Delivery selected. Please pay when you receive
+            your order.
           </p>
 
           <button onClick={() => navigate("/my-orders")}>
@@ -404,14 +492,21 @@ function Checkout() {
       <header className="checkout-heading">
         <span>SMART FOODCOURT</span>
         <h1>Checkout</h1>
-        <p>Select your order type, address and payment method.</p>
+        <p>
+          Select your order type, address and payment method.
+        </p>
       </header>
 
-      {error && <div className="checkout-error">{error}</div>}
+      {error && (
+        <div className="checkout-error">
+          {error}
+        </div>
+      )}
 
       <div className="checkout-layout">
         <section className="checkout-left">
 
+          {/* CUSTOMER INFORMATION */}
           <div className="checkout-card">
             <h2>Customer Information</h2>
 
@@ -431,6 +526,7 @@ function Checkout() {
             </div>
           </div>
 
+          {/* ORDER TYPE */}
           <div className="checkout-card">
             <h2>Choose Order Type</h2>
 
@@ -452,7 +548,9 @@ function Checkout() {
               >
                 <span className="selection-icon">🍽️</span>
                 <strong>Dine In</strong>
-                <small>Enjoy your meal at the restaurant</small>
+                <small>
+                  Enjoy your meal at the restaurant
+                </small>
                 <span className="selection-check">
                   {deliveryType === "dine_in" ? "✓" : ""}
                 </span>
@@ -497,7 +595,7 @@ function Checkout() {
               </button>
             </div>
 
-            {/* AVAILABLE TABLE DROPDOWN */}
+            {/* AVAILABLE TABLES */}
             {deliveryType === "dine_in" && (
               <div className="table-number-field">
                 <label htmlFor="tableNumber">
@@ -549,17 +647,22 @@ function Checkout() {
             {deliveryType === "delivery" && (
               <div className="checkout-address">
                 <h3>Delivery Address</h3>
+
                 <p className="checkout-section-description">
                   Enter the address where you want your food delivered.
                 </p>
 
                 <div className="address-form-grid">
                   <div className="address-field">
-                    <label htmlFor="houseNumber">House / Flat Number *</label>
+                    <label htmlFor="houseNumber">
+                      House / Flat Number *
+                    </label>
                     <input
                       id="houseNumber"
                       value={address.house_number}
-                      onChange={e => updateAddress("house_number", e.target.value)}
+                      onChange={e =>
+                        updateAddress("house_number", e.target.value)
+                      }
                       placeholder="e.g. A-102"
                       disabled={addressSaved}
                     />
@@ -570,29 +673,39 @@ function Checkout() {
                     <input
                       id="street"
                       value={address.street}
-                      onChange={e => updateAddress("street", e.target.value)}
+                      onChange={e =>
+                        updateAddress("street", e.target.value)
+                      }
                       placeholder="Enter street"
                       disabled={addressSaved}
                     />
                   </div>
 
                   <div className="address-field address-full">
-                    <label htmlFor="area">Area / Locality *</label>
+                    <label htmlFor="area">
+                      Area / Locality *
+                    </label>
                     <input
                       id="area"
                       value={address.area}
-                      onChange={e => updateAddress("area", e.target.value)}
+                      onChange={e =>
+                        updateAddress("area", e.target.value)
+                      }
                       placeholder="Enter area or locality"
                       disabled={addressSaved}
                     />
                   </div>
 
                   <div className="address-field address-full">
-                    <label htmlFor="landmark">Landmark (Optional)</label>
+                    <label htmlFor="landmark">
+                      Landmark (Optional)
+                    </label>
                     <input
                       id="landmark"
                       value={address.landmark}
-                      onChange={e => updateAddress("landmark", e.target.value)}
+                      onChange={e =>
+                        updateAddress("landmark", e.target.value)
+                      }
                       placeholder="Nearby landmark"
                       disabled={addressSaved}
                     />
@@ -603,7 +716,9 @@ function Checkout() {
                     <input
                       id="city"
                       value={address.city}
-                      onChange={e => updateAddress("city", e.target.value)}
+                      onChange={e =>
+                        updateAddress("city", e.target.value)
+                      }
                       placeholder="Enter city"
                       disabled={addressSaved}
                     />
@@ -614,14 +729,18 @@ function Checkout() {
                     <input
                       id="state"
                       value={address.state}
-                      onChange={e => updateAddress("state", e.target.value)}
+                      onChange={e =>
+                        updateAddress("state", e.target.value)
+                      }
                       placeholder="Enter state"
                       disabled={addressSaved}
                     />
                   </div>
 
                   <div className="address-field address-full">
-                    <label htmlFor="pincode">6-Digit Pincode *</label>
+                    <label htmlFor="pincode">
+                      6-Digit Pincode *
+                    </label>
                     <input
                       id="pincode"
                       value={address.pincode}
@@ -641,7 +760,7 @@ function Checkout() {
 
                 {addressSaved && (
                   <p className="address-saved-message">
-                    ✓ Delivery address saved. You can edit it if needed.
+                    ✓ Delivery address saved.
                   </p>
                 )}
 
@@ -676,13 +795,19 @@ function Checkout() {
                 className={`payment-selection ${
                   paymentMethod === "Cash on Delivery" ? "selected" : ""
                 }`}
-                onClick={() => setPaymentMethod("Cash on Delivery")}
+                onClick={() =>
+                  setPaymentMethod("Cash on Delivery")
+                }
               >
                 <span className="payment-icon">💵</span>
+
                 <span className="payment-text">
                   <strong>Cash on Delivery</strong>
-                  <small>Pay when you receive your order</small>
+                  <small>
+                    Pay when you receive your order
+                  </small>
                 </span>
+
                 <span className="payment-radio">
                   {paymentMethod === "Cash on Delivery" ? "✓" : ""}
                 </span>
@@ -691,136 +816,138 @@ function Checkout() {
               <button
                 type="button"
                 className={`payment-selection ${
-                  paymentMethod === "UPI" ? "selected" : ""
+                  paymentMethod === "Pay Online" ? "selected" : ""
                 }`}
-                onClick={() => setPaymentMethod("UPI")}
-              >
-                <span className="payment-icon">📱</span>
-                <span className="payment-text">
-                  <strong>UPI</strong>
-                  <small>Google Pay, PhonePe, Paytm etc.</small>
-                </span>
-                <span className="payment-radio">
-                  {paymentMethod === "UPI" ? "✓" : ""}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className={`payment-selection ${
-                  paymentMethod === "Debit Card" ? "selected" : ""
-                }`}
-                onClick={() => setPaymentMethod("Debit Card")}
+                onClick={() => setPaymentMethod("Pay Online")}
               >
                 <span className="payment-icon">💳</span>
+
                 <span className="payment-text">
-                  <strong>Debit Card</strong>
-                  <small>Pay using your debit card</small>
+                  <strong>Pay Online</strong>
+                  <small>
+                    UPI, Debit Card, Credit Card and Net Banking
+                  </small>
                 </span>
+
                 <span className="payment-radio">
-                  {paymentMethod === "Debit Card" ? "✓" : ""}
+                  {paymentMethod === "Pay Online" ? "✓" : ""}
                 </span>
               </button>
             </div>
-
-            <p className="demo-payment-note">
-              Demo mode: UPI and Debit Card selections will not process actual payments.
-            </p>
           </div>
         </section>
 
         {/* ORDER SUMMARY */}
-        {/* ORDER SUMMARY */}
-<aside className="checkout-card checkout-summary">
-  <h2>Your Order</h2>
+        <aside className="checkout-card checkout-summary">
+          <h2>Your Order</h2>
 
-  {cart.items.map((item, index) => (
-    <div
-      className="checkout-food"
-      key={item.cart_item_id || `${item.food_id}-${index}`}
-    >
-      <div>
-        <strong>{item.name}</strong>
-        <span>Quantity: {item.quantity}</span>
+          {cart.items.map((item, index) => (
+            <div
+              className="checkout-food"
+              key={
+                item.cart_item_id ||
+                `${item.food_id}-${index}`
+              }
+            >
+              <div>
+                <strong>{item.name}</strong>
+                <span>Quantity: {item.quantity}</span>
 
-        {item.customizations && item.customizations.length > 0 && (
-          <div className="checkout-customizations">
-            <strong>Customizations</strong>
+                {item.customizations &&
+                  item.customizations.length > 0 && (
+                    <div className="checkout-customizations">
+                      <strong>Customizations</strong>
 
-            {item.customizations.map((option, optionIndex) => (
-              <p key={optionIndex}>
-  {option.group || option.name || "Option"}: {option.option}
-  {Number(option.additional_price) > 0 &&
-    ` (+₹${Number(option.additional_price).toFixed(2)})`}
-</p>
-            ))}
+                      {item.customizations.map(
+                        (option, optionIndex) => (
+                          <p key={optionIndex}>
+                            {option.group ||
+                              option.name ||
+                              "Option"}: {option.option}
+                            {Number(option.additional_price) > 0 &&
+                              ` (+₹${Number(
+                                option.additional_price
+                              ).toFixed(2)})`}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  )}
+
+                {item.special_instructions && (
+                  <div className="checkout-instructions">
+                    <strong>Special Instructions</strong>
+                    <p>{item.special_instructions}</p>
+                  </div>
+                )}
+              </div>
+
+              <strong>
+                ₹{Number(item.subtotal).toFixed(2)}
+              </strong>
+            </div>
+          ))}
+
+          <div className="checkout-total-row">
+            <span>Total Items</span>
+            <strong>{cart.total_items}</strong>
           </div>
-        )}
 
-        {item.special_instructions && (
-          <div className="checkout-instructions">
-            <strong>Special Instructions</strong>
-            <p>{item.special_instructions}</p>
+          <div className="checkout-total-row">
+            <span>Subtotal</span>
+            <strong>
+              ₹{Number(cart.total_price).toFixed(2)}
+            </strong>
           </div>
-        )}
-      </div>
 
-      <strong>₹{Number(item.subtotal).toFixed(2)}</strong>
-    </div>
-  ))}
+          <div className="checkout-grand-total">
+            <span>Total Amount</span>
+            <strong>
+              ₹{Number(cart.total_price).toFixed(2)}
+            </strong>
+          </div>
 
-  <div className="checkout-total-row">
-    <span>Total Items</span>
-    <strong>{cart.total_items}</strong>
-  </div>
+          <div className="checkout-selected-details">
+            <p>
+              <span>Order Type</span>
+              <strong>{deliveryLabel(deliveryType)}</strong>
+            </p>
 
-  <div className="checkout-total-row">
-    <span>Subtotal</span>
-    <strong>₹{Number(cart.total_price).toFixed(2)}</strong>
-  </div>
+            <p>
+              <span>Payment</span>
+              <strong>{paymentMethod}</strong>
+            </p>
 
-  <div className="checkout-grand-total">
-    <span>Total Amount</span>
-    <strong>₹{Number(cart.total_price).toFixed(2)}</strong>
-  </div>
+            {deliveryType === "dine_in" && tableNumber && (
+              <p>
+                <span>Selected Table</span>
+                <strong>Table {tableNumber}</strong>
+              </p>
+            )}
+          </div>
 
-  <div className="checkout-selected-details">
-    <p>
-      <span>Order Type</span>
-      <strong>{deliveryLabel(deliveryType)}</strong>
-    </p>
+          <button
+            className="place-order-button"
+            onClick={placeOrder}
+            disabled={
+              placingOrder ||
+              cart.items.length === 0 ||
+              (deliveryType === "dine_in" &&
+                (!tableNumber || loadingTables)) ||
+              (deliveryType === "delivery" && !addressSaved)
+            }
+          >
+            {placingOrder
+              ? "Processing..."
+              : paymentMethod === "Pay Online"
+                ? "Proceed to Pay"
+                : "Place Order"}
+          </button>
 
-    <p>
-      <span>Payment</span>
-      <strong>{paymentMethod}</strong>
-    </p>
-
-    {deliveryType === "dine_in" && tableNumber && (
-      <p>
-        <span>Selected Table</span>
-        <strong>Table {tableNumber}</strong>
-      </p>
-    )}
-  </div>
-
-  <button
-    className="place-order-button"
-    onClick={placeOrder}
-    disabled={
-      placingOrder ||
-      cart.items.length === 0 ||
-      (deliveryType === "dine_in" &&
-        (!tableNumber || loadingTables)) ||
-      (deliveryType === "delivery" && !addressSaved)
-    }
-  >
-    {placingOrder ? "Placing Order..." : "Place Order"}
-  </button>
-
-  <p className="checkout-note">
-    Please review your order details before placing your order.
-  </p>
-</aside>
+          <p className="checkout-note">
+            Please review your order details before placing your order.
+          </p>
+        </aside>
       </div>
     </main>
   );

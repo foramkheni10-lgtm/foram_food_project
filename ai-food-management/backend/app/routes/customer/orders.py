@@ -93,11 +93,33 @@ def serialize_order(order: dict) -> dict:
 # =====================================================
 # GET AVAILABLE TABLES
 # =====================================================
+    
+
 
 @router.get("/available-tables")
 async def get_available_tables(
     customer: dict = Depends(get_current_customer)
 ):
+    # Release expired temporary reservations
+    await database.tables.update_many(
+        {
+            "manual_status": "Reserved",
+            "reservation_expires_at": {
+                "$lte": datetime.now(timezone.utc)
+            }
+        },
+        {
+            "$set": {
+                "manual_status": "Available"
+            },
+            "$unset": {
+                "reserved_txnid": "",
+                "reserved_customer_id": "",
+                "reservation_expires_at": ""
+            }
+        }
+    )
+
     cursor = database.tables.find(
         {
             "manual_status": {
@@ -258,8 +280,12 @@ async def place_order(
 
     # VALIDATE CART ITEMS AND RECALCULATE PRICES
 
+    
     order_items = []
     total_price = 0.0
+
+    order_restaurant_id = None
+    order_restaurant_name = ""
 
     for cart_item in cart["items"]:
 
@@ -313,8 +339,74 @@ async def place_order(
 
         unit_price = base_price + customization_total
         subtotal = unit_price * quantity
+                # Get restaurant information from the food document
+        restaurant_id = (
+            food.get("restaurant_id")
+            or food.get("restaurantId")
+        )
+
+        if isinstance(restaurant_id, dict):
+            restaurant_id = (
+                restaurant_id.get("_id")
+                or restaurant_id.get("id")
+            )
+
+        restaurant_id = (
+            str(restaurant_id)
+            if restaurant_id
+            else None
+        )
+
+        if not restaurant_id:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{food.get('name', 'A food item')} "
+                    "is not linked to a restaurant."
+                )
+            )
+
+        restaurant_name = (
+            food.get("restaurant_name")
+            or food.get("restaurantName")
+            or ""
+        )
+
+        # Fetch the restaurant's actual name
+        restaurant_query = (
+            {"_id": ObjectId(restaurant_id)}
+            if ObjectId.is_valid(restaurant_id)
+            else {"_id": restaurant_id}
+        )
+
+        restaurant = await database.restaurants.find_one(
+            restaurant_query
+        )
+
+        if restaurant:
+            restaurant_name = (
+                restaurant.get("name")
+                or restaurant.get("restaurant_name")
+                or restaurant.get("restaurantName")
+                or restaurant_name
+            )
+
+        # Ensure every food item belongs to the same restaurant
+        if order_restaurant_id is None:
+            order_restaurant_id = restaurant_id
+            order_restaurant_name = restaurant_name
+        elif order_restaurant_id != restaurant_id:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Your cart contains food from different restaurants. "
+                    "Please order from one restaurant at a time."
+                )
+            )
 
         order_items.append({
+            "restaurant_id": restaurant_id,
+            "restaurant_name": restaurant_name,
             "cart_item_id": cart_item.get(
                 "cart_item_id",
                 cart_item["food_id"]
@@ -334,12 +426,13 @@ async def place_order(
         })
 
         total_price += subtotal
-
     # CREATE ORDER DATA
 
     order_number = f"SFC-{uuid4().hex[:10].upper()}"
 
     order = {
+                "restaurant_id": order_restaurant_id,
+        "restaurant_name": order_restaurant_name,
         "order_number": order_number,
         "customer_id": customer_id,
         "customer_name": customer.get("name", ""),

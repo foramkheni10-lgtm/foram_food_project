@@ -315,8 +315,8 @@ function CustomerLayout() {
     <div className="sf-footer-column">
       <h3>Quick Links</h3>
       <Link to="/">Home</Link>
-      <Link to="/about">About Us</Link>
-      <Link to="/contact">Contact Us</Link>
+      <Link to="/About">About Us</Link>
+      <Link to="/Contact">Contact Us</Link>
     </div>
 
     {/* LEGAL */}

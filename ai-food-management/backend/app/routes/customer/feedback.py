@@ -28,10 +28,7 @@ async def submit_feedback(
     customer: dict = Depends(get_current_customer)
 ):
     if not ObjectId.is_valid(request.order_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid order ID."
-        )
+        raise HTTPException(400, "Invalid order ID.")
 
     customer_id = str(customer["_id"])
 
@@ -41,26 +38,26 @@ async def submit_feedback(
     })
 
     if not order:
+        raise HTTPException(404, "Order not found.")
+
+    if str(order.get("order_status", "")).strip().lower() not in {
+        "delivered", "completed", "complete"
+    }:
         raise HTTPException(
-            status_code=404,
-            detail="Order not found."
+            400,
+            "You can submit feedback only after your order is completed."
         )
 
-    order_status = str(
-        order.get("order_status", "")
-    ).strip().lower()
+    restaurant_id = order.get("restaurant_id")
+    restaurant_name = order.get("restaurant_name", "")
 
-    completed_statuses = {
-        "delivered",
-        "completed",
-        "complete"
-    }
-
-    if order_status not in completed_statuses:
+    if not restaurant_id:
         raise HTTPException(
-            status_code=400,
-            detail="You can submit feedback only after your order is completed."
+            400,
+            "Restaurant information is missing from this order."
         )
+
+    restaurant_id = str(restaurant_id)
 
     existing_feedback = await database.feedback.find_one({
         "order_id": request.order_id,
@@ -69,8 +66,8 @@ async def submit_feedback(
 
     if existing_feedback:
         raise HTTPException(
-            status_code=400,
-            detail="You have already submitted feedback for this order."
+            400,
+            "You have already submitted feedback for this order."
         )
 
     feedback = {
@@ -79,6 +76,8 @@ async def submit_feedback(
         "customer_id": customer_id,
         "customer_name": customer.get("name", ""),
         "customer_email": customer.get("email", ""),
+        "restaurant_id": restaurant_id,
+        "restaurant_name": restaurant_name,
         "rating": request.rating,
         "comment": (request.comment or "").strip(),
         "created_at": datetime.now(timezone.utc)
@@ -128,6 +127,7 @@ async def get_public_feedback():
             "rating": 1,
             "comment": 1,
             "created_at": 1,
+            "restaurant_name": 1
         }
     ).sort("created_at", -1)
 
@@ -136,28 +136,23 @@ async def get_public_feedback():
     async for feedback in cursor:
         feedback_list.append(feedback)
 
-    # Collect customer IDs
     customer_ids = {
         feedback.get("customer_id")
         for feedback in feedback_list
         if feedback.get("customer_id")
     }
 
-    # Convert valid IDs to MongoDB ObjectIds
-    object_ids = []
+    object_ids = [
+        ObjectId(customer_id)
+        for customer_id in customer_ids
+        if ObjectId.is_valid(customer_id)
+    ]
 
-    for customer_id in customer_ids:
-        if ObjectId.is_valid(customer_id):
-            object_ids.append(ObjectId(customer_id))
-
-    # Fetch customer profiles
     users = {}
 
     if object_ids:
         user_cursor = database.users.find(
-            {
-                "_id": {"$in": object_ids}
-            },
+            {"_id": {"$in": object_ids}},
             {
                 "_id": 1,
                 "profile_image": 1,
@@ -174,13 +169,11 @@ async def get_public_feedback():
         async for user in user_cursor:
             users[str(user["_id"])] = user
 
-    # Attach profile images to feedback
     for feedback in feedback_list:
-
         customer_id = feedback.get("customer_id", "")
         user = users.get(customer_id, {})
 
-        profile_image = (
+        feedback["profile_image"] = (
             user.get("profile_image_url")
             or user.get("profile_image")
             or user.get("profile_picture_url")
@@ -192,9 +185,6 @@ async def get_public_feedback():
             or ""
         )
 
-        feedback["profile_image"] = profile_image
-
-        # Do not expose internal customer IDs publicly
         feedback.pop("customer_id", None)
 
     return {
