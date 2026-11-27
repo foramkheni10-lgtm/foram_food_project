@@ -3,6 +3,8 @@ from app.db_config import db
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException
 from bson import ObjectId
+from fastapi import Depends
+from app.security import require_roles
 
 router = APIRouter(
     prefix="/api/admin",
@@ -43,23 +45,35 @@ def admin_dashboard():
 # ADMIN - GET ALL ORDERS
 # ==============================
 
-@router.get("/orders")
-def admin_get_all_orders(status: str = None):
 
+# ==============================
+# ADMIN - VIEW ALL ORDERS
+# READ ONLY
+# ==============================
+
+@router.get("/orders/")
+def admin_get_all_orders(
+    status: str = None,
+    admin: dict = Depends(require_roles("admin"))
+):
     query = {}
 
-    # Filter orders by status if provided
     if status:
         query["status"] = status
 
-    orders = list(orders_collection.find(query))
+    orders = list(
+        orders_collection.find(query).sort("_id", -1)
+    )
 
-    # Convert MongoDB ObjectId to string
     for order in orders:
         order["_id"] = str(order["_id"])
 
-    return orders
+        # Convert any other top-level ObjectId fields
+        for key, value in order.items():
+            if isinstance(value, ObjectId):
+                order[key] = str(value)
 
+    return orders
 
 # ==============================
 # ADMIN - GET ALL DELIVERIES
