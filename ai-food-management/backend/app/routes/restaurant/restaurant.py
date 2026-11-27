@@ -1070,7 +1070,11 @@ async def get_restaurant_order_list(restaurant_id: str):
 # UPDATE RESTAURANT ORDER STATUS
 # ==========================================================
 
-@router.put("/{restaurant_id}/orders/{order_id}/status")
+# @router.put("/{restaurant_id}/orders/{order_id}/status")
+
+# ==========================================================
+# UPDATE RESTAURANT ORDER STATUS
+# ==========================================================
 
 # ==========================================================
 # UPDATE RESTAURANT ORDER STATUS
@@ -1119,11 +1123,9 @@ async def update_restaurant_order_status(
         )
 
     # VERIFY RESTAURANT OWNS THIS ORDER
-
     restaurant_owns_order = False
 
     for item in order.get("items", []):
-
         food_id = str(item.get("food_id", ""))
 
         if not ObjectId.is_valid(food_id):
@@ -1144,10 +1146,7 @@ async def update_restaurant_order_status(
         )
 
     # VALIDATE STATUS TRANSITION
-
-    restaurant_statuses = order.get(
-        "restaurant_statuses", {}
-    )
+    restaurant_statuses = order.get("restaurant_statuses", {})
 
     current_status = restaurant_statuses.get(
         restaurant_id,
@@ -1180,11 +1179,9 @@ async def update_restaurant_order_status(
         )
 
     # GET ALL RESTAURANTS IN THIS ORDER
-
     order_restaurant_ids = set()
 
     for item in order.get("items", []):
-
         food_id = str(item.get("food_id", ""))
 
         if not ObjectId.is_valid(food_id):
@@ -1200,7 +1197,6 @@ async def update_restaurant_order_status(
             )
 
     # SAVE RESTAURANT STATUS
-
     update_fields = {
         f"restaurant_statuses.{restaurant_id}": new_status
     }
@@ -1234,7 +1230,6 @@ async def update_restaurant_order_status(
         )
 
     # SEND CUSTOMER ORDER STATUS NOTIFICATION
-
     notification_messages = {
         "Accepted": (
             "Order Accepted",
@@ -1289,8 +1284,6 @@ async def update_restaurant_order_status(
         "new_status": saved_status,
         "overall_status": updated_order.get("order_status")
     }
-
-
 
 # ==========================================================
 # GET RESTAURANT DETAILS

@@ -28,6 +28,25 @@ function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Supports both MongoDB _id and frontend id formats.
+  const normalizeNotifications = (data: any): Notification[] => {
+    const records = Array.isArray(data)
+      ? data
+      : data?.notifications || data?.items || [];
+
+    return records.map((item: any) => ({
+      id: String(item.id || item._id || ""),
+      title: item.title || "Notification",
+      message: item.message || "",
+      type: item.type || "general",
+      related_id: item.related_id
+        ? String(item.related_id)
+        : null,
+      is_read: Boolean(item.is_read),
+      created_at: item.created_at,
+    })).filter((item: Notification) => item.id);
+  };
+
   const fetchNotifications = useCallback(async () => {
     const token = localStorage.getItem("smartfoodcourt_token");
 
@@ -43,12 +62,18 @@ function NotificationBell() {
         api.get("/api/notifications/unread-count"),
       ]);
 
-      setNotifications(
-        notificationResponse.data?.notifications || []
-      );
+      const formatted = normalizeNotifications(notificationResponse.data);
+
+      setNotifications(formatted);
+
+      const serverCount =
+        countResponse.data?.unread_count ??
+        countResponse.data?.count;
 
       setUnreadCount(
-        countResponse.data?.unread_count || 0
+        serverCount !== undefined
+          ? Number(serverCount)
+          : formatted.filter((item) => !item.is_read).length
       );
     } catch (error) {
       console.error("Unable to load notifications:", error);
@@ -144,8 +169,12 @@ function NotificationBell() {
         aria-label="Notifications"
         aria-expanded={isOpen}
         onClick={() => {
-          setIsOpen((previous) => !previous);
-          fetchNotifications();
+          const nextOpen = !isOpen;
+          setIsOpen(nextOpen);
+
+          if (nextOpen) {
+            fetchNotifications();
+          }
         }}
       >
         <Bell size={21} />
@@ -195,7 +224,7 @@ function NotificationBell() {
                 onClick={markAllAsRead}
               >
                 <CheckCheck size={16} />
-                Mark all as read
+                {loading ? "Please wait..." : "Mark all as read"}
               </button>
             )}
 
@@ -204,7 +233,9 @@ function NotificationBell() {
                 <div className="sf-notification-empty">
                   <Bell size={32} />
                   <strong>No notifications yet</strong>
-                  <span>Updates about your orders will appear here.</span>
+                  <span>
+                    Updates about your orders will appear here.
+                  </span>
                 </div>
               ) : (
                 notifications.map((notification) => (
@@ -228,7 +259,9 @@ function NotificationBell() {
                       <p>{notification.message}</p>
 
                       <div className="sf-notification-meta">
-                        <span>{formatDate(notification.created_at)}</span>
+                        <span>
+                          {formatDate(notification.created_at)}
+                        </span>
 
                         {!notification.is_read && (
                           <span className="sf-unread-label">New</span>
@@ -267,7 +300,9 @@ function NotificationBell() {
                         type="button"
                         title="Delete notification"
                         aria-label="Delete notification"
-                        onClick={() => deleteNotification(notification.id)}
+                        onClick={() =>
+                          deleteNotification(notification.id)
+                        }
                       >
                         <Trash2 size={16} />
                       </button>

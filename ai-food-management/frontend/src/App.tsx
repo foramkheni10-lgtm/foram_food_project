@@ -83,7 +83,6 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/my-orders" element={<MyOrders />} />
 
-          {/* Customer Feedback */}
           <Route
             path="/feedback"
             element={<CustomerFeedback />}
@@ -167,7 +166,6 @@ function App() {
                   element={<AIAnalytics />}
                 />
 
-                {/* Restaurant Feedback */}
                 <Route
                   path="feedback"
                   element={<RestaurantFeedback />}
