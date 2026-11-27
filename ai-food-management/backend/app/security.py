@@ -62,7 +62,7 @@ async def get_current_user(
 ):
     token = credentials.credentials
 
-    try:
+        try:
         payload = jwt.decode(
             token,
             JWT_SECRET_KEY,
@@ -78,12 +78,14 @@ async def get_current_user(
             )
 
     except JWTError as exc:
-    print("JWT VERIFICATION ERROR:", type(exc).__name__, str(exc))
+        print("JWT VERIFICATION ERROR:", type(exc).__name__, str(exc))
 
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or expired authentication token"
-    )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired authentication token"
+        )
+
+    # Find user AFTER successful token verification
     user = await database.users.find_one({
         "_id": ObjectId(user_id)
     })
@@ -93,7 +95,6 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account not found"
         )
-
     # Invalidate old sessions after password changes.
     token_version = int(payload.get("ver", 0))
     current_version = int(user.get("token_version", 0))
