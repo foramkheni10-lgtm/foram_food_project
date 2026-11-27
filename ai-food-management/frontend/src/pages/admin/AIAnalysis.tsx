@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   Flame,
   BarChart3,
-  BrainCircuit,
   CheckCircle2,
   TrendingUp,
 } from "lucide-react";
