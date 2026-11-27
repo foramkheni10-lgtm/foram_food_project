@@ -10,3 +10,4 @@ email-validator
 httpx
 python-multipart
 pandas
+scikit-learn
